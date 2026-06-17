@@ -9,7 +9,8 @@ const app = express();
 app.use(express.json({ limit: "256kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-const API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
+const API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";          // server key (Distance Matrix)
+const BROWSER_KEY = process.env.GOOGLE_MAPS_BROWSER_KEY || "";  // referrer-restricted key (Maps JS + Places + Directions)
 const PORT = process.env.PORT || 3000;
 
 // Node 18+ has global fetch. Guard for older runtimes.
@@ -19,7 +20,14 @@ if (typeof fetch !== "function") {
 
 // --- health / key presence (does NOT reveal the key) ---
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, keyConfigured: Boolean(API_KEY) });
+  res.json({ ok: true, keyConfigured: Boolean(API_KEY), browserKeyConfigured: Boolean(BROWSER_KEY) });
+});
+
+// --- browser config: hands the front-end the maps/places key ---
+// This key is meant to be public but MUST be referrer-restricted in Google Cloud
+// (locked to your Render domain) so it can't be used elsewhere.
+app.get("/api/config", (req, res) => {
+  res.json({ browserKey: BROWSER_KEY });
 });
 
 // --- travel time matrix ---

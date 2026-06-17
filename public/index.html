@@ -14,112 +14,124 @@
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    font-size:15px;line-height:1.5}
-  header{display:flex;align-items:center;gap:14px;padding:18px 26px;border-bottom:1px solid var(--line)}
-  .logo{width:42px;height:42px;border-radius:9px;background:var(--amber);display:flex;align-items:center;
-    justify-content:center;color:#1a1a1a;font-weight:800;font-size:20px}
-  header h1{margin:0;font-size:20px;letter-spacing:.5px;font-weight:800}
-  header p{margin:0;font-size:12px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5}
+  header{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--line)}
+  .logo{width:40px;height:40px;border-radius:9px;background:var(--amber);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-weight:800;font-size:19px}
+  header h1{margin:0;font-size:19px;letter-spacing:.5px;font-weight:800}
+  header p{margin:0;font-size:11px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
   .keystate{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
   .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)}
   .dot.on{background:var(--green)} .dot.off{background:var(--red)}
-  .wrap{display:grid;grid-template-columns:1fr 390px;min-height:calc(100vh - 79px)}
-  @media(max-width:880px){.wrap{grid-template-columns:1fr}}
-  .main{padding:22px 26px}
-  .side{background:var(--panel);border-left:1px solid var(--line);padding:22px 24px}
-  @media(max-width:880px){.side{border-left:none;border-top:1px solid var(--line)}}
-  h2.section{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 14px;font-weight:700}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+  .wrap{display:grid;grid-template-columns:340px 1fr 360px;min-height:calc(100vh - 73px)}
+  @media(max-width:1100px){.wrap{grid-template-columns:1fr}}
+  .col{padding:18px 20px;overflow:auto}
+  .col.add{border-right:1px solid var(--line)}
+  .col.mapcol{padding:0;position:relative;min-height:420px}
+  .col.side{background:var(--panel);border-left:1px solid var(--line)}
+  #map{position:absolute;inset:0;background:#0a0b0e}
+  @media(max-width:1100px){.col.mapcol{min-height:420px}#map{position:absolute}}
+  h2.section{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:13px}
   .jobcard{border-left:3px solid var(--amber)}
   label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
-  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--txt);
-    padding:9px 11px;font-size:14px;font-family:inherit}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px 11px;font-size:14px;font-family:inherit}
   input:focus,select:focus{outline:none;border-color:var(--amber-dim)}
-  .row{display:grid;gap:10px;margin-bottom:11px}
+  .row{display:grid;gap:9px;margin-bottom:10px}
   .r2{grid-template-columns:1fr 1fr}
-  button{font-family:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);
-    color:var(--txt);padding:9px 14px;font-size:14px;font-weight:600}
+  button{font-family:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:9px 13px;font-size:14px;font-weight:600}
   button:hover{border-color:var(--amber-dim)}
   .btn-amber{background:var(--amber);color:#1a1a1a;border-color:var(--amber);font-weight:700}
   .btn-amber:hover{background:var(--amber-dim);border-color:var(--amber-dim)}
   .btn-amber:disabled{opacity:.5;cursor:not-allowed}
   .btn-ghost{background:transparent;color:var(--muted)}
-  .btn-x{background:transparent;border-color:transparent;color:var(--faint);padding:8px}
+  .btn-x{background:transparent;border-color:transparent;color:var(--faint);padding:6px}
   .btn-x:hover{color:var(--red)}
-  .mach-row{display:grid;grid-template-columns:1fr 70px 30px;gap:8px;align-items:center;margin-bottom:8px}
-  .job-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--blue)}
+  .mach-row{display:grid;grid-template-columns:1fr 64px 28px;gap:7px;align-items:center;margin-bottom:7px}
+  .job-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;border-left:3px solid var(--blue)}
   .job-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
   .tag{font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:#23304a;color:var(--blue);font-weight:700}
-  .job-meta{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6}
-  .empty{color:var(--faint);font-size:13px;text-align:center;padding:26px 10px;border:1px dashed var(--line);border-radius:10px}
-  .verdict{border-radius:12px;padding:18px 20px;margin-bottom:16px;border:1px solid var(--line)}
+  .job-meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55}
+  .empty{color:var(--faint);font-size:13px;text-align:center;padding:24px 10px;border:1px dashed var(--line);border-radius:10px}
+  /* stops list */
+  .stop{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px;cursor:grab}
+  .stop.dragging{opacity:.4} .stop.depot{border-left:3px solid var(--amber);cursor:default}
+  .stop .num{width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--txt);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .stop.pick .num{background:#1f4d3a;color:var(--green)} .stop.drop .num{background:#3a2350;color:#c4a3e8}
+  .stop .lbl{flex:1;min-width:0}
+  .stop .lbl b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stop .lbl span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .stop .mv{display:flex;flex-direction:column;gap:1px}
+  .stop .mv button{padding:1px 6px;font-size:11px;line-height:1.3;border-radius:5px}
+  .stop .drive{font-size:11px;color:var(--blue);flex-shrink:0}
+  .verdict{border-radius:12px;padding:16px 18px;margin-bottom:14px;border:1px solid var(--line)}
   .verdict.one{background:var(--green-bg);border-color:#1f4d3a}
   .verdict.two{background:var(--red-bg);border-color:#4d2222}
-  .verdict h3{margin:0 0 4px;font-size:22px}
+  .verdict h3{margin:0 0 3px;font-size:21px}
   .verdict.one h3{color:var(--green)} .verdict.two h3{color:var(--red)}
   .verdict p{margin:0;font-size:13px;color:var(--muted)}
-  .stat{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
-  .stat:last-child{border-bottom:none}
-  .stat .v{font-weight:700}
-  .truckblk{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
-  .truckblk h4{margin:0 0 8px;font-size:14px;color:var(--amber)}
-  .step{font-size:12px;color:var(--muted);padding:4px 0;border-bottom:1px dashed var(--line)}
-  .step:last-child{border-bottom:none}
-  .step b{color:var(--txt)}
-  .drive{color:var(--blue)}
+  .stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .stat:last-child{border-bottom:none} .stat .v{font-weight:700}
   .reason{font-size:12px;color:var(--muted);margin-top:6px;padding-left:14px;position:relative}
   .reason:before{content:"\203A";position:absolute;left:0;color:var(--amber)}
   .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
-  .bar > i{display:block;height:100%;background:var(--amber)}
-  .bar.over > i{background:var(--red)}
-  .hint{font-size:11px;color:var(--faint);margin-top:10px;line-height:1.6}
-  details{margin-top:14px} summary{cursor:pointer;font-size:12px;color:var(--muted)}
-  .warn{font-size:12px;color:var(--red);margin-top:8px}
+  .bar>i{display:block;height:100%;background:var(--amber)} .bar.over>i{background:var(--red)}
+  .hint{font-size:11px;color:var(--faint);margin-top:9px;line-height:1.55}
+  .warn{font-size:12px;color:var(--red);margin-top:6px}
+  .toolbar{display:flex;gap:8px;margin-bottom:13px}
+  .toolbar button{flex:1}
+  .banner{position:absolute;top:12px;left:12px;right:12px;z-index:5;background:#2a1717;border:1px solid #4d2222;color:#fca5a5;font-size:12px;padding:10px 12px;border-radius:9px;display:none}
+  .pac-container{z-index:9999!important}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">AV</div>
-  <div>
-    <h1>ROUTE PLANNER</h1>
-    <p>Delivery routing &amp; truck allocation</p>
-  </div>
-  <div class="keystate"><span class="dot" id="keydot"></span><span id="keytxt">checking key…</span></div>
+  <div><h1>ROUTE PLANNER</h1><p>Delivery routing &amp; truck allocation</p></div>
+  <div class="keystate"><span class="dot" id="keydot"></span><span id="keytxt">checking…</span></div>
 </header>
 
 <div class="wrap">
-  <div class="main">
+  <!-- LEFT: add job + job list -->
+  <div class="col add">
     <h2 class="section">Add a job</h2>
     <div class="card jobcard">
+      <div class="row"><div><label>Pickup address</label><input id="f-pick" placeholder="Start typing an address…" autocomplete="off" /></div></div>
+      <div class="row"><div><label>Delivery address</label><input id="f-drop" placeholder="Start typing an address…" autocomplete="off" /></div></div>
       <div class="row r2">
-        <div><label>Pickup address</label><input id="f-pick" placeholder="e.g. 12 Main St, Cranbourne VIC" /></div>
-        <div><label>Delivery address</label><input id="f-drop" placeholder="e.g. 80 High St, Geelong VIC" /></div>
-      </div>
-      <div class="row r2">
-        <div><label>Pickups at this job</label><input id="f-npick" type="number" min="0" value="0" /></div>
-        <div><label>Deliveries at this job</label><input id="f-ndrop" type="number" min="0" value="0" /></div>
+        <div><label>Pickups</label><input id="f-npick" type="number" min="0" value="1" /></div>
+        <div><label>Deliveries</label><input id="f-ndrop" type="number" min="0" value="1" /></div>
       </div>
       <label>Machines on this job</label>
       <div id="mach-rows"></div>
-      <button class="btn-ghost" id="add-mach" style="margin:2px 0 12px;font-size:13px">+ add machine</button>
+      <button class="btn-ghost" id="add-mach" style="margin:1px 0 11px;font-size:13px">+ add machine</button>
       <button class="btn-amber" id="add-job" style="width:100%">Add job to plan</button>
-      <div class="hint">Travel times are pulled automatically from Google Distance Matrix between each stop in order. Service time = 30 min per pickup + 30 min per delivery. Day window = 8 hours after the ~07:00 Tullamarine drop. Capacity checked against 7.72 m² floor and 2,000 kg payload (Truck 16 ARV).</div>
+      <div class="hint">Pick addresses from the dropdown so coordinates are captured. Service time = 30 min/pickup + 30 min/delivery. Day window = 8 h after the ~07:00 Tullamarine drop. Capacity: 7.72 m² floor, 2,000 kg (Truck 16 ARV).</div>
     </div>
-
-    <h2 class="section" style="margin-top:22px">Jobs in plan (<span id="job-count">0</span>) — served in the order added</h2>
-    <div id="joblist"><div class="empty">No jobs yet. Add one above to start planning.</div></div>
+    <h2 class="section" style="margin-top:18px">Jobs (<span id="job-count">0</span>)</h2>
+    <div id="joblist"><div class="empty">No jobs yet.</div></div>
   </div>
 
-  <div class="side">
-    <h2 class="section">Result</h2>
-    <div id="result"><div class="empty">Add jobs, then plan the route.</div></div>
-    <button class="btn-amber" id="plan-btn" style="width:100%;margin-top:6px;display:none">Plan route &amp; fetch travel times</button>
+  <!-- CENTRE: map -->
+  <div class="col mapcol">
+    <div class="banner" id="map-banner"></div>
+    <div id="map"></div>
+  </div>
+
+  <!-- RIGHT: stops + result -->
+  <div class="col side">
+    <h2 class="section">Route stops</h2>
+    <div class="toolbar">
+      <button class="btn-amber" id="smart-btn">⚡ Smart Optimize</button>
+      <button class="btn-ghost" id="recalc-btn">↻ Recalculate</button>
+    </div>
+    <div id="stops"><div class="empty">Add jobs, then plan.</div></div>
+    <h2 class="section" style="margin-top:18px">Result</h2>
+    <div id="result"><div class="empty">No route yet.</div></div>
   </div>
 </div>
 
 <script>
-const CATALOG = {
+const CATALOG={
   "M2000":{w:763,d:713,kg:250},"M3000 — 3 wide":{w:762,d:830,kg:300},
   "M4000 — 4 wide":{w:890,d:830,kg:335},"M5000 — 5 wide":{w:1050,d:830,kg:365},
   "M6000 — 6 wide":{w:1215,d:830,kg:395},"Coffee Machine":{w:600,d:740,kg:130},
@@ -127,38 +139,92 @@ const CATALOG = {
 };
 const TRUCK={floorM2:7.72,maxKg:2000};
 const WINDOW_MIN=8*60, PICK_MIN=30, DROP_MIN=30;
-const START_DEPOT="Tullamarine VIC";   // route begins here after the morning drop
-let jobs=[];
+const DEPOT={label:"Tullamarine warehouse", addr:"Tullamarine VIC 3043, Australia", lat:-37.6886, lng:144.8807};
 
-// key status
+let jobs=[];          // {pick:{addr,lat,lng}, drop:{addr,lat,lng}, npick, ndrop, machines:[{model,qty}]}
+let stops=[];         // ordered working list of {jobIdx, type:'pick'|'drop', addr, lat, lng, label}
+let mapsReady=false, map, directionsService, directionsRenderer, geocoder;
+
+/* ---------- load Google Maps JS with the browser key from the server ---------- */
 fetch('/api/health').then(r=>r.json()).then(d=>{
   const dot=document.getElementById('keydot'), txt=document.getElementById('keytxt');
-  if(d.keyConfigured){dot.className='dot on';txt.textContent='maps key active';}
-  else {dot.className='dot off';txt.textContent='no maps key — set GOOGLE_MAPS_API_KEY';}
-}).catch(()=>{document.getElementById('keytxt').textContent='server unreachable';});
+  if(d.keyConfigured && d.browserKeyConfigured){dot.className='dot on';txt.textContent='keys active';}
+  else if(d.browserKeyConfigured){dot.className='dot on';txt.textContent='map key active';}
+  else {dot.className='dot off';txt.textContent='no browser key — set GOOGLE_MAPS_BROWSER_KEY';}
+});
+fetch('/api/config').then(r=>r.json()).then(cfg=>{
+  if(!cfg.browserKey){ showBanner("No browser maps key configured. Set GOOGLE_MAPS_BROWSER_KEY in Render's Environment tab (a referrer-restricted key)."); return; }
+  const s=document.createElement('script');
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(cfg.browserKey)}&libraries=places&callback=initMaps`;
+  s.async=true; s.defer=true;
+  s.onerror=()=>showBanner("Google Maps failed to load — check the browser key and that Maps JavaScript API + Places API are enabled.");
+  document.head.appendChild(s);
+});
 
+function showBanner(msg){const b=document.getElementById('map-banner');b.textContent=msg;b.style.display='block';}
+function hideBanner(){document.getElementById('map-banner').style.display='none';}
+
+window.initMaps=function(){
+  mapsReady=true;
+  map=new google.maps.Map(document.getElementById('map'),{
+    center:{lat:DEPOT.lat,lng:DEPOT.lng}, zoom:9, mapTypeControl:false, streetViewControl:false,
+    styles:[ {elementType:"geometry",stylers:[{color:"#1c1f28"}]},
+      {elementType:"labels.text.stroke",stylers:[{color:"#0e0f13"}]},
+      {elementType:"labels.text.fill",stylers:[{color:"#9aa0ad"}]},
+      {featureType:"road",elementType:"geometry",stylers:[{color:"#2a2e3a"}]},
+      {featureType:"water",elementType:"geometry",stylers:[{color:"#0a0b0e"}]},
+      {featureType:"poi",stylers:[{visibility:"off"}]} ]
+  });
+  directionsService=new google.maps.DirectionsService();
+  directionsRenderer=new google.maps.DirectionsRenderer({map, suppressMarkers:false,
+    polylineOptions:{strokeColor:"#f5c518",strokeWeight:5,strokeOpacity:.9}});
+  geocoder=new google.maps.Geocoder();
+  attachAutocomplete(document.getElementById('f-pick'),'pick');
+  attachAutocomplete(document.getElementById('f-drop'),'drop');
+  hideBanner();
+};
+
+let picked={pick:null,drop:null};
+function attachAutocomplete(input,which){
+  const ac=new google.maps.places.Autocomplete(input,{
+    fields:['formatted_address','geometry'],
+    componentRestrictions:{country:'au'}
+  });
+  ac.addListener('place_changed',()=>{
+    const p=ac.getPlace();
+    if(p.geometry){ picked[which]={addr:p.formatted_address, lat:p.geometry.location.lat(), lng:p.geometry.location.lng()}; }
+  });
+}
+
+/* ---------- machines sub-form ---------- */
 const machRows=document.getElementById('mach-rows');
 function machRowHTML(){
   const opts=Object.keys(CATALOG).map(m=>`<option>${m}</option>`).join('');
   const div=document.createElement('div');div.className='mach-row';
-  div.innerHTML=`<select class="m-model">${opts}</select><input class="m-qty" type="number" min="1" value="1" /><button class="btn-x m-del">\u2715</button>`;
+  div.innerHTML=`<select class="m-model">${opts}</select><input class="m-qty" type="number" min="1" value="1"/><button class="btn-x m-del">✕</button>`;
   div.querySelector('.m-del').onclick=()=>div.remove();return div;
 }
 document.getElementById('add-mach').onclick=()=>machRows.appendChild(machRowHTML());
 machRows.appendChild(machRowHTML());
 
+/* ---------- add job ---------- */
 document.getElementById('add-job').onclick=()=>{
-  const pick=document.getElementById('f-pick').value.trim();
-  const drop=document.getElementById('f-drop').value.trim();
   const npick=+document.getElementById('f-npick').value||0;
   const ndrop=+document.getElementById('f-ndrop').value||0;
+  const pickAddr=document.getElementById('f-pick').value.trim();
+  const dropAddr=document.getElementById('f-drop').value.trim();
   const machines=[...machRows.querySelectorAll('.mach-row')].map(r=>({model:r.querySelector('.m-model').value,qty:+r.querySelector('.m-qty').value||1}));
-  if(!pick&&!drop){alert('Enter at least a pickup or delivery address.');return;}
+  if(!pickAddr&&!dropAddr){alert('Enter at least a pickup or delivery address.');return;}
   if(npick===0&&ndrop===0){alert('Set at least one pickup or delivery.');return;}
+  // use the autocomplete-picked coords when available; else fall back to text (will be geocoded later)
+  const pick=pickAddr?(picked.pick&&picked.pick.addr===pickAddr?picked.pick:{addr:pickAddr,lat:null,lng:null}):null;
+  const drop=dropAddr?(picked.drop&&picked.drop.addr===dropAddr?picked.drop:{addr:dropAddr,lat:null,lng:null}):null;
   jobs.push({pick,drop,npick,ndrop,machines});
+  picked={pick:null,drop:null};
   document.getElementById('f-pick').value='';document.getElementById('f-drop').value='';
-  document.getElementById('f-npick').value=0;document.getElementById('f-ndrop').value=0;
-  machRows.innerHTML='';machRows.appendChild(machRowHTML());renderJobs();
+  document.getElementById('f-npick').value=1;document.getElementById('f-ndrop').value=1;
+  machRows.innerHTML='';machRows.appendChild(machRowHTML());
+  rebuildStops(); renderJobs(); renderStops();
 };
 
 function jobLoad(j){let kg=0,area=0;j.machines.forEach(m=>{const s=CATALOG[m.model];if(!s)return;kg+=s.kg*m.qty;area+=(s.w/1000)*(s.d/1000)*m.qty;});return{kg,area};}
@@ -170,102 +236,175 @@ function fmt(min){min=Math.round(min);const h=Math.floor(min/60),m=min%60;return
 function renderJobs(){
   document.getElementById('job-count').textContent=jobs.length;
   const list=document.getElementById('joblist');
-  document.getElementById('plan-btn').style.display=jobs.length?'block':'none';
-  if(!jobs.length){list.innerHTML='<div class="empty">No jobs yet. Add one above to start planning.</div>';
-    document.getElementById('result').innerHTML='<div class="empty">Add jobs, then plan the route.</div>';return;}
+  if(!jobs.length){list.innerHTML='<div class="empty">No jobs yet.</div>';return;}
   list.innerHTML=jobs.map((j,i)=>{
     const ld=jobLoad(j),mc=jobMachineCount(j);
-    const machTxt=j.machines.map(m=>`${m.qty}\u00d7 ${m.model}`).join(', ')||'\u2014';
-    const route=[j.pick&&('Pick: '+j.pick),j.drop&&('Drop: '+j.drop)].filter(Boolean).join('  \u2022  ');
+    const machTxt=j.machines.map(m=>`${m.qty}× ${m.model}`).join(', ')||'—';
+    const route=[j.pick&&('Pick: '+j.pick.addr),j.drop&&('Drop: '+j.drop.addr)].filter(Boolean).join(' • ');
     return `<div class="job-item"><div class="job-head"><strong>Job ${i+1}</strong>
-      <span class="tag">${j.npick}P / ${j.ndrop}D</span>
-      <button class="btn-x" onclick="delJob(${i})">\u2715</button></div>
-      <div class="job-meta">${route||'\u2014'}<br>${machTxt}<br>
-      ${mc} machine(s) \u00b7 ${Math.round(ld.kg)} kg \u00b7 ${ld.area.toFixed(2)} m\u00b2 \u00b7 service ${jobServiceTime(j)} min</div></div>`;
+      <span class="tag">${j.npick}P / ${j.ndrop}D</span><button class="btn-x" onclick="delJob(${i})">✕</button></div>
+      <div class="job-meta">${route||'—'}<br>${machTxt}<br>${mc} machine(s) · ${Math.round(ld.kg)} kg · ${ld.area.toFixed(2)} m² · service ${jobServiceTime(j)} min</div></div>`;
   }).join('');
 }
-window.delJob=i=>{jobs.splice(i,1);renderJobs();};
+window.delJob=i=>{jobs.splice(i,1);rebuildStops();renderJobs();renderStops();};
 
-// Build the ordered list of stops for the matrix call:
-// depot -> (job1 pick -> job1 drop) -> (job2 pick -> job2 drop) -> ...
-function buildStops(){
-  const stops=[{label:'Tullamarine warehouse',addr:START_DEPOT,type:'depot'}];
+/* ---------- stops: build from jobs, keeping pickup before its delivery ---------- */
+function rebuildStops(){
+  stops=[];
   jobs.forEach((j,i)=>{
-    if(j.pick) stops.push({label:`Job ${i+1} pickup`,addr:j.pick,type:'pick',job:i});
-    if(j.drop) stops.push({label:`Job ${i+1} delivery`,addr:j.drop,type:'drop',job:i});
+    if(j.pick) stops.push({jobIdx:i,type:'pick',addr:j.pick.addr,lat:j.pick.lat,lng:j.pick.lng,label:`Job ${i+1} pickup`});
+    if(j.drop) stops.push({jobIdx:i,type:'drop',addr:j.drop.addr,lat:j.drop.lat,lng:j.drop.lng,label:`Job ${i+1} delivery`});
   });
-  return stops;
 }
 
-document.getElementById('plan-btn').onclick=plan;
+/* enforce: each job's pickup index < its delivery index. minimal correction pass. */
+function enforcePrecedence(arr){
+  let changed=true, guard=0;
+  while(changed && guard++<50){
+    changed=false;
+    for(let i=0;i<arr.length;i++){
+      if(arr[i].type==='drop'){
+        const pickPos=arr.findIndex(s=>s.jobIdx===arr[i].jobIdx&&s.type==='pick');
+        if(pickPos>i){ // delivery before its pickup -> move pickup just before delivery
+          const [pk]=arr.splice(pickPos,1); arr.splice(i,0,pk); changed=true; break;
+        }
+      }
+    }
+  }
+  return arr;
+}
 
-async function plan(){
+function renderStops(){
+  const el=document.getElementById('stops');
+  if(!stops.length){el.innerHTML='<div class="empty">Add jobs, then plan.</div>';return;}
+  let html=`<div class="stop depot"><div class="num">▶</div><div class="lbl"><b>${DEPOT.label}</b><span>Start &amp; end</span></div></div>`;
+  stops.forEach((s,i)=>{
+    html+=`<div class="stop ${s.type}" draggable="true" data-i="${i}">
+      <div class="num">${i+1}</div>
+      <div class="lbl"><b>${s.label}</b><span>${s.addr}</span></div>
+      <div class="mv"><button onclick="moveStop(${i},-1)">▲</button><button onclick="moveStop(${i},1)">▼</button></div>
+    </div>`;
+  });
+  html+=`<div class="stop depot"><div class="num">■</div><div class="lbl"><b>${DEPOT.label}</b><span>Return</span></div></div>`;
+  el.innerHTML=html;
+  enableDrag();
+}
+
+window.moveStop=(i,dir)=>{
+  const j=i+dir; if(j<0||j>=stops.length)return;
+  [stops[i],stops[j]]=[stops[j],stops[i]];
+  enforcePrecedence(stops);
+  renderStops(); planRoute();
+};
+
+function enableDrag(){
+  const items=[...document.querySelectorAll('.stop[draggable="true"]')];
+  let dragEl=null;
+  items.forEach(it=>{
+    it.addEventListener('dragstart',()=>{dragEl=it;it.classList.add('dragging');});
+    it.addEventListener('dragend',()=>{it.classList.remove('dragging');
+      const order=[...document.querySelectorAll('.stop[draggable="true"]')].map(x=>+x.dataset.i);
+      stops=order.map(idx=>stops[idx]); enforcePrecedence(stops); renderStops(); planRoute();});
+    it.addEventListener('dragover',e=>{e.preventDefault();
+      const after=getAfter(it.parentNode,e.clientY);
+      if(after==null)it.parentNode.appendChild(dragEl); else it.parentNode.insertBefore(dragEl,after);});
+  });
+}
+function getAfter(container,y){
+  const els=[...container.querySelectorAll('.stop[draggable="true"]:not(.dragging)')];
+  return els.reduce((closest,child)=>{
+    const box=child.getBoundingClientRect(); const offset=y-box.top-box.height/2;
+    if(offset<0&&offset>closest.offset)return{offset,element:child}; return closest;
+  },{offset:-Infinity}).element||null;
+}
+
+/* ---------- geocode any stops missing coords (typed, not picked) ---------- */
+function geocodeMissing(){
+  if(!mapsReady)return Promise.resolve();
+  const todo=stops.filter(s=>s.lat==null);
+  return Promise.all(todo.map(s=>new Promise(res=>{
+    geocoder.geocode({address:s.addr,componentRestrictions:{country:'AU'}},(r,status)=>{
+      if(status==='OK'&&r[0]){s.lat=r[0].geometry.location.lat();s.lng=r[0].geometry.location.lng();}
+      res();
+    });
+  })));
+}
+
+/* ---------- draw + measure the route via Directions ---------- */
+document.getElementById('recalc-btn').onclick=()=>planRoute();
+document.getElementById('smart-btn').onclick=()=>planRoute(true);
+
+async function planRoute(optimize=false){
+  if(!stops.length)return;
+  if(!mapsReady){showBanner("Map not ready — waiting for Google Maps to load.");return;}
+  const smart=document.getElementById('smart-btn'); smart.disabled=true;
+  await geocodeMissing();
+
+  const waypoints=stops.filter(s=>s.lat!=null).map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}));
+  if(waypoints.length===0){smart.disabled=false;return;}
+
+  directionsService.route({
+    origin:{lat:DEPOT.lat,lng:DEPOT.lng},
+    destination:{lat:DEPOT.lat,lng:DEPOT.lng},
+    waypoints, optimizeWaypoints:optimize, travelMode:google.maps.TravelMode.DRIVING
+  },(result,status)=>{
+    smart.disabled=false;
+    if(status!=='OK'){showBanner("Directions request failed: "+status+". Check the Directions API is enabled & billing is on.");renderResult(null);return;}
+    hideBanner();
+    directionsRenderer.setDirections(result);
+
+    // if Google reordered, reflect it in our stops, then re-enforce precedence
+    const order=result.routes[0].waypoint_order;
+    if(optimize && order && order.length===stops.length){
+      stops=order.map(idx=>stops[idx]);
+      enforcePrecedence(stops);
+      renderStops();
+    }
+    const legs=result.routes[0].legs;
+    const totalDrive=legs.reduce((s,l)=>s+l.duration.value,0)/60;
+    // attach per-stop incoming drive time to the displayed stops (legs align to current order)
+    renderResult(totalDrive, legs);
+  });
+}
+
+function renderResult(totalDrive, legs){
   const res=document.getElementById('result');
-  const btn=document.getElementById('plan-btn');
-  if(!jobs.length)return;
-  btn.disabled=true;btn.textContent='Fetching travel times…';
-
-  const stops=buildStops();
-  let legs=[],totalDrive=0,matrixError=null;
-  try{
-    const r=await fetch('/api/matrix',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({points:stops.map(s=>s.addr)})});
-    const data=await r.json();
-    if(data.error){matrixError=data.error;}
-    else{legs=data.legs||[];totalDrive=data.totalMinutes||0;}
-  }catch(e){matrixError='Could not reach the server.';}
-
-  btn.disabled=false;btn.textContent='Plan route & fetch travel times';
-
   const totalService=jobs.reduce((s,j)=>s+jobServiceTime(j),0);
+  if(totalDrive==null){res.innerHTML='<div class="warn">Could not calculate the route.</div>';return;}
   const totalTime=totalService+totalDrive;
   const reasons=[];
-
   const timeOverflow=totalTime>WINDOW_MIN;
-  if(timeOverflow)reasons.push(`Total estimated time is ${fmt(totalTime)} (${fmt(totalService)} service + ${fmt(totalDrive)} driving), over the 8-hour single-truck window.`);
-
+  if(timeOverflow)reasons.push(`Total ${fmt(totalTime)} (${fmt(totalService)} service + ${fmt(totalDrive)} driving) exceeds the 8-hour window.`);
   const oversize=jobs.filter(j=>!fitsTruck(j));
-  if(oversize.length)reasons.push(`${oversize.length} job(s) exceed one truck's floor or weight on their own — must be split into multiple trips or reviewed.`);
-
+  if(oversize.length)reasons.push(`${oversize.length} job(s) exceed one truck's floor/weight alone — split or review.`);
   const dedicated=jobs.filter(j=>{const l=jobLoad(j);return fitsTruck(j)&&(l.kg/TRUCK.maxKg>=0.85||l.area/TRUCK.floorM2>=0.85);});
-  if(dedicated.length>=2)reasons.push(`${dedicated.length} jobs each need a near-full dedicated trip — hard to sequence on one truck in the window.`);
-
+  if(dedicated.length>=2)reasons.push(`${dedicated.length} jobs each need a near-full dedicated trip.`);
   const needTwo=timeOverflow||dedicated.length>=2;
 
   const pct=Math.min(100,Math.round(totalTime/WINDOW_MIN*100));
   let html=`<div class="verdict ${needTwo?'two':'one'}"><h3>${needTwo?'Two trucks':'One truck'}</h3>
-    <p>${needTwo?'Allocate the second truck (driver on standby).':'All jobs fit one truck within the 8-hour window.'}</p></div>`;
-
-  if(matrixError) html+=`<div class="card" style="padding:12px 14px"><div class="warn">Travel times unavailable: ${matrixError}<br>Showing service time only — total excludes driving.</div></div>`;
-
-  html+=`<div class="card" style="padding:14px 16px">
-    <div class="stat"><span>Total jobs</span><span class="v">${jobs.length}</span></div>
-    <div class="stat"><span>Pickups / Deliveries</span><span class="v">${jobs.reduce((s,j)=>s+j.npick,0)} / ${jobs.reduce((s,j)=>s+j.ndrop,0)}</span></div>
+    <p>${needTwo?'Allocate the second truck (driver on standby).':'Fits one truck within the 8-hour window.'}</p></div>
+    <div class="card" style="padding:13px 15px">
+    <div class="stat"><span>Jobs</span><span class="v">${jobs.length}</span></div>
     <div class="stat"><span>Service time</span><span class="v">${fmt(totalService)}</span></div>
-    <div class="stat"><span>Driving time (live)</span><span class="v">${matrixError?'\u2014':fmt(totalDrive)}</span></div>
-    <div class="stat"><span>Total est. time</span><span class="v">${fmt(totalTime)}</span></div>
-    <div class="stat"><span>Single-truck window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
+    <div class="stat"><span>Driving (live)</span><span class="v">${fmt(totalDrive)}</span></div>
+    <div class="stat"><span>Total</span><span class="v">${fmt(totalTime)}</span></div>
+    <div class="stat"><span>Window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
     <div class="bar ${timeOverflow?'over':''}"><i style="width:${pct}%"></i></div></div>`;
-
-  if(reasons.length)html+=`<div class="card" style="padding:14px 16px"><label style="margin-bottom:8px">Why</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
-
-  // single continuous route — always one block, in order
-  let steps=`<div class="step"><b>05:00</b> \u00b7 Depart Cranbourne, load Tullamarine product</div>
-    <div class="step"><b>~07:00</b> \u00b7 Drop at Tullamarine warehouse (fixed job #1)</div>`;
-  let legIdx=0;
-  for(let s=1;s<stops.length;s++){
-    const leg=legs[legIdx++]; const stop=stops[s];
-    const driveTxt=leg?(leg.minutes!=null?`<span class="drive">drive ${fmt(leg.minutes)}</span> \u2192 `:`<span class="warn">${leg.status}</span> \u2192 `):'';
-    const svc=stop.type==='pick'?'pickup 30m':stop.type==='drop'?'delivery 30m':'';
-    steps+=`<div class="step">${driveTxt}<b>${stop.label}</b> \u00b7 ${stop.addr}${svc?' \u00b7 '+svc:''}</div>`;
-  }
-  html+=`<div class="truckblk"><h4>Single route \u2014 ${fmt(totalTime)} total${needTwo?' (exceeds one truck)':''}</h4>${steps}</div>`;
-
-  html+=`<details><summary>Assumptions used</summary><div class="hint">Truck 16 ARV: 7.72 m\u00b2 floor, 2,000 kg payload. 30 min/pickup, 30 min/delivery. Live driving times from Google Distance Matrix between consecutive stops, starting from the Tullamarine warehouse. 8-hour window after the ~07:00 drop. Jobs are served in the order you added them (no automatic resequencing).</div></details>`;
-
+  if(reasons.length)html+=`<div class="card" style="padding:13px 15px"><label style="margin-bottom:7px">Why</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
   res.innerHTML=html;
+
+  // show incoming drive times on the stop rows
+  if(legs){
+    const rows=[...document.querySelectorAll('.stop[draggable="true"]')];
+    rows.forEach((row,i)=>{
+      const leg=legs[i]; // leg i = depot/prev -> stop i
+      if(leg){const d=document.createElement('div');d.className='drive';d.textContent=Math.round(leg.duration.value/60)+'m';row.appendChild(d);}
+    });
+  }
 }
-renderJobs();
+
+renderJobs(); renderStops();
 </script>
 </body>
 </html>
