@@ -82,6 +82,15 @@
   .pac-container{z-index:9999!important}
   .small{font-size:11px;color:var(--muted)}
   .depot-sel{margin-bottom:6px;font-size:12px;color:var(--muted)}
+  .dj{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px}
+  .dj .h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .dj .h b{font-size:13px} .dj .meta{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .dj .acts{display:flex;gap:5px} .dj .acts button{padding:4px 8px;font-size:11px}
+  .stop{cursor:grab} .stop.dragging{opacity:.4}
+  .stop .mv{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+  .stop .mv button{padding:0 6px;font-size:10px;line-height:1.4;border-radius:4px}
+  .times{font-size:10px;color:var(--muted);flex-shrink:0;text-align:right;line-height:1.4}
+  .times .eta{color:var(--blue)} .times .etd{color:var(--amber)} .times .clk{color:var(--faint)}
 </style>
 </head>
 <body>
@@ -138,13 +147,36 @@
     <div class="note" id="booknote"></div>
     <div class="navrow"><button class="btn-ghost" id="wk-prev">‹ prev</button><b id="wk-label"></b><button class="btn-ghost" id="wk-next">next ›</button></div>
     <div class="cal" id="cal"></div>
+    <h2 class="section" style="margin-top:16px">Jobs on this day <span id="dayjob-count" class="small"></span></h2>
+    <div id="dayjobs"><div class="empty">Pick a day.</div></div>
     <h2 class="section" style="margin-top:16px">Selected day <span id="sel-label" class="small"></span></h2>
     <div class="toolbar">
       <button class="btn-amber" id="plan-btn">⚡ Plan day</button>
+      <button class="btn-ghost" id="opt-btn" title="Re-run best road-time order">↻ Smart optimize</button>
     </div>
     <div id="result"><div class="empty">Pick a day, then Plan day.</div></div>
-    <h2 class="section" style="margin-top:16px">Route stops</h2>
+    <h2 class="section" style="margin-top:16px">Route stops <span class="small">drag or ▲▼ to reorder</span></h2>
     <div id="stops"><div class="empty">No route yet.</div></div>
+  </div>
+</div>
+
+<!-- edit-job modal -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center">
+  <div class="card" style="width:380px;max-width:92vw;max-height:88vh;overflow:auto;margin:0">
+    <h2 class="section" style="display:flex;justify-content:space-between">Edit job <button class="btn-x" id="edit-close">✕</button></h2>
+    <div class="row"><div><label>Pickup address</label>
+      <select id="e-pick-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
+      <input id="e-pick" autocomplete="off"/></div></div>
+    <div class="row"><div><label>Delivery address</label>
+      <select id="e-drop-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
+      <input id="e-drop" autocomplete="off"/></div></div>
+    <div class="row r2"><div><label>Pickups</label><input id="e-npick" type="number" min="0"/></div><div><label>Deliveries</label><input id="e-ndrop" type="number" min="0"/></div></div>
+    <label>Machines</label><div id="e-mach-rows"></div>
+    <button class="btn-ghost" id="e-add-mach" style="margin:0 0 9px;font-size:13px">+ add machine</button>
+    <div class="chk"><input type="checkbox" id="e-timed"/><label for="e-timed" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Timed delivery (priority)</label></div>
+    <div class="row r2" id="e-timed-fields" style="display:none"><div><label>From</label><input id="e-tfrom" type="time"/></div><div><label>To</label><input id="e-tto" type="time"/></div></div>
+    <div class="row"><div><label>Booked date</label><input id="e-date" type="date"/></div></div>
+    <button class="btn-amber" id="edit-save" style="width:100%">Save changes</button>
   </div>
 </div>
 
@@ -168,6 +200,7 @@ let mapsReady=false, map, directionsService, directionsRenderer, geocoder;
 let weekStart=mondayOf(new Date());
 let selectedDate=null;
 let lastRouteStops=[];
+let manualOrder=null;   // when set, a user-locked route order (array of stop keys); overrides auto-optimize
 
 /* ---------- persistence (localStorage — works in any browser) ---------- */
 async function loadJobs(){
@@ -428,11 +461,119 @@ function renderCal(){
     cal.appendChild(div);
   }
 }
-function selectDay(ds){selectedDate=ds;document.getElementById('sel-label').textContent=fmtDate(new Date(ds+'T00:00:00'));renderCal();renderDayJobs();document.getElementById('result').innerHTML='<div class="empty">Press Plan day to route &amp; check.</div>';document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';}
+function selectDay(ds){
+  selectedDate=ds;
+  manualOrder=null;  // reset any locked order when switching days
+  document.getElementById('sel-label').textContent=fmtDate(new Date(ds+'T00:00:00'));
+  renderCal();renderDayJobs();
+  document.getElementById('result').innerHTML='<div class="empty">Press Plan day to route &amp; check.</div>';
+  document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';
+}
 
 function renderDayJobs(){
-  // show the selected day's jobs in the left list area? We show them in result region header instead — keep stops/result clean.
+  const el=document.getElementById('dayjobs');
+  const list=selectedDate?jobsOn(selectedDate):[];
+  document.getElementById('dayjob-count').textContent=list.length?`(${list.length})`:'';
+  if(!selectedDate){el.innerHTML='<div class="empty">Pick a day.</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">No jobs booked this day.</div>';return;}
+  el.innerHTML=list.map(j=>{
+    const idx=jobs.findIndex(x=>x.id===j.id)+1;
+    const mach=j.machines.map(m=>`${m.qty}× ${m.model}`).join(', ')||'—';
+    const route=[j.pick&&('P: '+j.pick.addr),j.drop&&('D: '+j.drop.addr)].filter(Boolean).join('<br>');
+    return `<div class="dj">
+      <div class="h"><b>Job ${idx}${j.timed?' ⏱':''}</b>
+        <div class="acts"><button onclick="editJob('${j.id}')">Edit</button><button onclick="moveJobDate('${j.id}')">Date</button><button class="btn-x" onclick="deleteJob('${j.id}')">✕</button></div></div>
+      <div class="meta">${route}<br>${mach} · ${Math.round(jobKg(j))} kg${j.timed?` · window ${j.tfrom}–${j.tto}`:''}</div>
+    </div>`;
+  }).join('');
 }
+
+window.deleteJob=async (id)=>{
+  if(!confirm('Delete this job?'))return;
+  jobs=jobs.filter(j=>j.id!==id);await saveJobs();
+  manualOrder=null; renderCal(); renderDayJobs();
+  document.getElementById('result').innerHTML='<div class="empty">Press Plan day to re-route.</div>';
+  document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';
+};
+
+window.moveJobDate=async (id)=>{
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  const nd=prompt('New date (YYYY-MM-DD):', j.date);
+  if(!nd)return;
+  const d=new Date(nd+'T00:00:00');
+  if(isNaN(d)||!isWeekday(d)){alert('Please enter a valid weekday (Mon–Fri) date.');return;}
+  j.date=nd;await saveJobs();
+  weekStart=mondayOf(d);renderCal();selectDay(nd);
+};
+
+/* ---------- edit modal ---------- */
+let editingId=null;
+const eMach=document.getElementById('e-mach-rows');
+function eMachRow(model,qty){
+  const opts=Object.keys(CATALOG).map(m=>`<option ${m===model?'selected':''}>${m}</option>`).join('');
+  const div=document.createElement('div');div.className='mach-row';
+  div.innerHTML=`<select class="m-model">${opts}</select><input class="m-qty" type="number" min="1" value="${qty||1}"/><button class="btn-x m-del">✕</button>`;
+  div.querySelector('.m-del').onclick=()=>div.remove();return div;
+}
+document.getElementById('e-add-mach').onclick=()=>eMach.appendChild(eMachRow());
+document.getElementById('e-timed').onchange=e=>document.getElementById('e-timed-fields').style.display=e.target.checked?'grid':'none';
+document.getElementById('edit-close').onclick=()=>document.getElementById('edit-modal').style.display='none';
+let ePicked={pick:null,drop:null};
+
+window.editJob=(id)=>{
+  const j=jobs.find(x=>x.id===id);if(!j)return;
+  editingId=id; ePicked={pick:j.pick?{...j.pick}:null, drop:j.drop?{...j.drop}:null};
+  document.getElementById('e-pick').value=j.pick?j.pick.addr:'';
+  document.getElementById('e-drop').value=j.drop?j.drop.addr:'';
+  document.getElementById('e-pick-depot').value=j.pick&&j.pick.depot?j.pick.depot:'';
+  document.getElementById('e-drop-depot').value=j.drop&&j.drop.depot?j.drop.depot:'';
+  document.getElementById('e-npick').value=j.npick;
+  document.getElementById('e-ndrop').value=j.ndrop;
+  document.getElementById('e-timed').checked=!!j.timed;
+  document.getElementById('e-timed-fields').style.display=j.timed?'grid':'none';
+  document.getElementById('e-tfrom').value=j.tfrom||'09:00';
+  document.getElementById('e-tto').value=j.tto||'11:00';
+  document.getElementById('e-date').value=j.date;
+  eMach.innerHTML=''; (j.machines.length?j.machines:[{model:'M2000',qty:1}]).forEach(m=>eMach.appendChild(eMachRow(m.model,m.qty)));
+  // attach autocomplete + depot selectors for edit fields (once maps ready)
+  if(mapsReady){
+    attachACel(document.getElementById('e-pick'),'pick');
+    attachACel(document.getElementById('e-drop'),'drop');
+  }
+  document.getElementById('edit-modal').style.display='flex';
+};
+function attachACel(input,which){
+  if(input._acAttached)return; input._acAttached=true;
+  const ac=new google.maps.places.Autocomplete(input,{fields:['formatted_address','geometry'],componentRestrictions:{country:'au'}});
+  ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p.geometry)ePicked[which]={addr:p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng(),depot:null};});
+  input.addEventListener('input',()=>{document.getElementById(which==='pick'?'e-pick-depot':'e-drop-depot').value='';});
+}
+['e-pick-depot','e-drop-depot'].forEach(selId=>{
+  const which=selId==='e-pick-depot'?'pick':'drop', inputId=selId==='e-pick-depot'?'e-pick':'e-drop';
+  document.getElementById(selId).addEventListener('change',e=>{
+    const v=e.target.value;
+    if(v==='CW'){ePicked[which]={addr:CW.addr,lat:CW.lat,lng:CW.lng,depot:'CW'};document.getElementById(inputId).value=CW.addr;}
+    else if(v==='TW'){ePicked[which]={addr:TW.addr,lat:TW.lat,lng:TW.lng,depot:'TW'};document.getElementById(inputId).value=TW.addr;}
+  });
+});
+document.getElementById('edit-save').onclick=async ()=>{
+  const j=jobs.find(x=>x.id===editingId);if(!j)return;
+  const pickAddr=document.getElementById('e-pick').value.trim();
+  const dropAddr=document.getElementById('e-drop').value.trim();
+  j.npick=+document.getElementById('e-npick').value||0;
+  j.ndrop=+document.getElementById('e-ndrop').value||0;
+  j.machines=[...eMach.querySelectorAll('.mach-row')].map(r=>({model:r.querySelector('.m-model').value,qty:+r.querySelector('.m-qty').value||1}));
+  j.timed=document.getElementById('e-timed').checked;
+  j.tfrom=document.getElementById('e-tfrom').value; j.tto=document.getElementById('e-tto').value;
+  j.pick=pickAddr?(ePicked.pick&&ePicked.pick.addr===pickAddr?ePicked.pick:{addr:pickAddr,lat:null,lng:null,depot:null}):null;
+  j.drop=dropAddr?(ePicked.drop&&ePicked.drop.addr===dropAddr?ePicked.drop:{addr:dropAddr,lat:null,lng:null,depot:null}):null;
+  const newDate=document.getElementById('e-date').value;
+  if(newDate&&newDate!==j.date)j.date=newDate;
+  await saveJobs();
+  document.getElementById('edit-modal').style.display='none';
+  manualOrder=null;
+  weekStart=mondayOf(new Date(j.date+'T00:00:00'));renderCal();selectDay(j.date);
+};
 
 /* ---------- plan the selected day (live Directions) ---------- */
 document.getElementById('plan-btn').onclick=()=>planDay();
@@ -447,25 +588,32 @@ async function planDay(){
   const cages=+document.getElementById('f-cages').value||0;
   const {seq}=sequence(dayJobs,cages);
   lastRouteStops=seq;
+  lastDayJobs=dayJobs;
+  lastDepotPicks=seq.filter(s=>s.atDepot);
 
-  // Depot pickups (loaded at CW start / TW drop) are not separate map waypoints.
-  const routeStops=seq.filter(s=>!s.atDepot && s.lat!=null);
-  // Has any timed delivery? If so, keep our computed order (don't let Google reshuffle past time windows).
+  const depotPicks=seq.filter(s=>s.atDepot);
+  let routeStops=seq.filter(s=>!s.atDepot && s.lat!=null);
+
+  // If the user locked a manual order, reorder routeStops to match it.
+  if(manualOrder){
+    const byKey=k=>routeStops.find(s=>stopKey(s)===k);
+    const reordered=manualOrder.map(byKey).filter(Boolean);
+    // include any stops not in the saved order (e.g. after an edit) at the end
+    routeStops.forEach(s=>{if(!reordered.includes(s))reordered.push(s);});
+    routeStops=reordered;
+  }
+
   const hasTimed=routeStops.some(s=>s.timed);
-  const optimize=!hasTimed;  // road-time optimization only when no timed delivery constrains the order
+  // optimize only when: no timed delivery AND no manual lock
+  const optimize = !hasTimed && !manualOrder;
 
-  // Route is split so TW (cage drop) stays pinned first:
-  //   fixed leg CW -> TW, then optimized leg TW -> [route stops] -> CW.
   const optWaypoints=routeStops.map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}));
 
-  // First get the fixed CW->TW leg time.
+  // fixed CW -> TW leg
   directionsService.route({
-    origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:TW.lat,lng:TW.lng},
-    travelMode:google.maps.TravelMode.DRIVING
+    origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:TW.lat,lng:TW.lng}, travelMode:google.maps.TravelMode.DRIVING
   },(cwtw,st0)=>{
-    const cwtwMin = (st0==='OK') ? cwtw.routes[0].legs[0].duration.value/60 : 0;
-
-    // Then the optimized TW -> stops -> CW leg.
+    const cwtwMin=(st0==='OK')?cwtw.routes[0].legs[0].duration.value/60:0;
     directionsService.route({
       origin:{lat:TW.lat,lng:TW.lng}, destination:{lat:CW.lat,lng:CW.lng},
       waypoints:optWaypoints, optimizeWaypoints:optimize, travelMode:google.maps.TravelMode.DRIVING
@@ -473,22 +621,71 @@ async function planDay(){
       btn.disabled=false;
       if(status!=='OK'){showBanner('Directions failed: '+status);renderResult(dayJobs,null,null,seq);return;}
       hideBanner();
-      directionsRenderer.setDirections(result);
 
       let displaySeq=routeStops;
       const wo=result.routes[0].waypoint_order;
       if(optimize && wo && wo.length===routeStops.length){
         displaySeq=wo.map(i=>routeStops[i]);
         enforcePrecedence(displaySeq);
+        // if Google's optimized order broke precedence and we reordered it, the drawn polyline
+        // still reflects Google's order; re-route in our corrected order to keep map + list in sync
       }
-      const depotPicks=seq.filter(s=>s.atDepot);
-      const finalSeq=[...depotPicks, ...displaySeq];
 
-      const legs=result.routes[0].legs;            // legs[0]=TW->stop0, ... last = ->CW
-      const driveMin=cwtwMin + legs.reduce((s,l)=>s+l.duration.value,0)/60;
-      renderResult(dayJobs, driveMin, legs, finalSeq, cwtwMin);
+      // Draw the map in our final display order (CW -> TW -> displaySeq -> CW) so the polyline matches the list.
+      drawRoute(displaySeq);
+
+      const finalSeq=[...depotPicks, ...displaySeq];
+      // store current order so reordering buttons have a baseline
+      manualOrder = manualOrder || null;
+      renderResult(dayJobs, cwtwMin, displaySeq, depotPicks);
     });
   });
+}
+
+function stopKey(s){return s.job.id+':'+s.type;}
+
+// Draw CW -> TW -> stops -> CW with CW pinned at both ends; fetch leg times in our exact order.
+function drawRoute(displaySeq){
+  const waypoints=[{location:{lat:TW.lat,lng:TW.lng},stopover:true},
+    ...displaySeq.map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}))];
+  directionsService.route({
+    origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:CW.lat,lng:CW.lng},
+    waypoints, optimizeWaypoints:false, travelMode:google.maps.TravelMode.DRIVING
+  },(res,st)=>{
+    if(st==='OK'){
+      directionsRenderer.setDirections(res);
+      // res.legs: [CW->TW, TW->stop0, stop0->stop1, ..., lastStop->CW]
+      lastLegs=res.routes[0].legs;
+      recomputeTimes(displaySeq);
+    }
+  });
+}
+
+let lastLegs=null;
+let lastDisplaySeq=[], lastDepotPicks=[], lastDayJobs=[];
+
+// compute ETA / service / ETD per stop from the live legs, and refresh the stop list
+function recomputeTimes(displaySeq){
+  if(!lastLegs)return;
+  const DEPART_CW=5*60;                       // 05:00 fixed departure
+  const cwtwMin=Math.round(lastLegs[0].duration.value/60);
+  const twArrival=DEPART_CW+cwtwMin;          // arrive TW for cage drop
+  // deliveries start after the drop, not before ~07:00
+  let clock=Math.max(twArrival, DAY_START_MIN);
+  const startClock=clock;
+  const stopsTimed=displaySeq.map((s,i)=>{
+    const driveMin=Math.round(lastLegs[i+1].duration.value/60);
+    const eta=clock+driveMin;
+    const service=(s.type==='pick'?PICK_MIN:DROP_MIN);
+    const etd=eta+service;
+    clock=etd;
+    return {...s, driveMin, eta, service, etd};
+  });
+  const backMin=Math.round(lastLegs[lastLegs.length-1].duration.value/60);
+  const finishClock=clock+backMin;
+  lastDisplaySeq=stopsTimed;
+  renderStops(stopsTimed, cwtwMin, backMin, finishClock, DEPART_CW, twArrival, startClock);
+  renderResultStats(lastDayJobs, cwtwMin, stopsTimed, backMin, finishClock, startClock);
 }
 
 // guarantee each job's pickup index < its delivery index (minimal correction)
@@ -516,55 +713,101 @@ function geocodeMissing(dayJobs){
   }))).then(saveJobs);
 }
 
-function renderResult(dayJobs, totalDrive, legs, seq, cwtwMin){
+// Called once after the first plan to set the initial map+stops; recomputeTimes does the per-stop timing.
+function renderResult(dayJobs, cwtwMin, displaySeq, depotPicks){
+  // drawRoute already triggered recomputeTimes which renders stops + stats.
+  // This is kept as the entry the planDay callback calls; the heavy lifting is in recomputeTimes.
+}
+
+function renderResultStats(dayJobs, cwtwMin, stopsTimed, backMin, finishClock, startClock){
   const res=document.getElementById('result');
   const service=dayJobs.reduce((s,j)=>s+jobService(j),0);
-  if(totalDrive==null){res.innerHTML='<div class="warn">Could not calculate the route.</div>';return;}
-  const total=service+totalDrive;
+  const driveMin=cwtwMin + stopsTimed.reduce((s,st)=>s+st.driveMin,0) + backMin;
+  const dayLen=finishClock-startClock+ (startClock-5*60); // total elapsed from 05:00 to finish
+  const workWindow=finishClock-startClock;                 // delivery-window usage (from ~07:00)
+  const overflow=workWindow>WINDOW_MIN;
   const reasons=[];
-  const overflow=total>WINDOW_MIN;
-  if(overflow)reasons.push(`Day length ${fmt(total)} (${fmt(service)} service + ${fmt(totalDrive)} driving) exceeds the 8-hour window.`);
+  if(overflow)reasons.push(`Delivery work runs to ${hhmm(finishClock)} — past the 8-hour window (should finish by ${hhmm(startClock+WINDOW_MIN)}).`);
   const oversize=dayJobs.filter(j=>jobArea(j)>TRUCK.floorM2||jobKg(j)>TRUCK.maxKg);
   if(oversize.length)reasons.push(`${oversize.length} job(s) exceed one truck on their own — split/review.`);
   const needTwo=overflow;
-  const pct=Math.min(100,Math.round(total/WINDOW_MIN*100));
+  const pct=Math.min(100,Math.round(workWindow/WINDOW_MIN*100));
   let html=`<div class="verdict ${needTwo?'two':'one'}"><h3>${needTwo?'Two trucks':'One truck'}</h3>
     <p>${needTwo?'This day overflows — allocate a second truck or move a job.':'Fits one truck within the 8-hour window.'}</p></div>
     <div class="card" style="padding:12px 14px">
     <div class="stat"><span>Jobs</span><span class="v">${dayJobs.length}</span></div>
-    <div class="stat"><span>Finish ~ </span><span class="v">${hhmm(DAY_START_MIN+total)}</span></div>
+    <div class="stat"><span>Delivery start</span><span class="v">${hhmm(startClock)}</span></div>
+    <div class="stat"><span>Finish at CW ~</span><span class="v">${hhmm(finishClock)}</span></div>
     <div class="stat"><span>Service</span><span class="v">${fmt(service)}</span></div>
-    <div class="stat"><span>Driving (live)</span><span class="v">${fmt(totalDrive)}</span></div>
-    <div class="stat"><span>Total</span><span class="v">${fmt(total)}</span></div>
-    <div class="stat"><span>Window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
+    <div class="stat"><span>Driving (live)</span><span class="v">${fmt(driveMin)}</span></div>
+    <div class="stat"><span>8-hour window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
     <div class="bar ${overflow?'over':''}"><i style="width:${pct}%"></i></div></div>`;
+  if(manualOrder)html+=`<div class="small" style="margin-bottom:8px">Manual order locked. Use Smart optimize to revert to best road-time order.</div>`;
   if(reasons.length)html+=`<div class="card" style="padding:12px 14px"><label style="margin-bottom:6px">Why</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
   res.innerHTML=html;
-
-  // legs[0]=TW->routeStop0, legs[k]=...->CW (last). cwtwMin is the fixed CW->TW leg.
-  const sd=document.getElementById('stops');
-  const depotStops=(seq||[]).filter(s=>s.atDepot);
-  const routeStops=(seq||[]).filter(s=>!s.atDepot);
-
-  let s=`<div class="stop depot"><div class="num">▶</div><div class="lbl"><b>${CW.label}</b><span>05:00 start</span></div></div>`;
-  depotStops.filter(st=>st.atDepot.startsWith('CW')).forEach(st=>{
-    s+=`<div class="stop pick"><div class="num">⬤</div><div class="lbl"><b>Job ${dayJobs.findIndex(j=>j.id===st.job.id)+1} pickup</b><span>${st.addr} — loaded at start</span></div></div>`;
-  });
-  s+=`<div class="stop depot"><div class="num">TW</div><div class="lbl"><b>${TW.label}</b><span>cage drop ~07:00</span></div>
-    <div class="drive">${cwtwMin?Math.round(cwtwMin)+'m':''}</div></div>`;
-  depotStops.filter(st=>st.atDepot.startsWith('TW')).forEach(st=>{
-    s+=`<div class="stop pick"><div class="num">⬤</div><div class="lbl"><b>Job ${dayJobs.findIndex(j=>j.id===st.job.id)+1} pickup</b><span>${st.addr} — loaded at TW drop</span></div></div>`;
-  });
-  routeStops.forEach((st,i)=>{
-    const leg=legs&&legs[i];     // legs[0] = TW -> first route stop
-    s+=`<div class="stop ${st.type}"><div class="num">${i+1}</div>
-      <div class="lbl"><b>Job ${dayJobs.findIndex(j=>j.id===st.job.id)+1} ${st.type==='pick'?'pickup':'delivery'}${st.timed?' ⏱':''}</b><span>${st.addr}</span></div>
-      <div class="drive">${leg?Math.round(leg.duration.value/60)+'m':''}</div></div>`;
-  });
-  s+=`<div class="stop depot"><div class="num">■</div><div class="lbl"><b>${CW.label}</b><span>return</span></div>
-    <div class="drive">${legs&&legs.length?Math.round(legs[legs.length-1].duration.value/60)+'m':''}</div></div>`;
-  sd.innerHTML=s;
 }
+
+function renderStops(stopsTimed, cwtwMin, backMin, finishClock, departCW, twArrival, startClock){
+  const sd=document.getElementById('stops');
+  const dayJobs=lastDayJobs, depotStops=lastDepotPicks;
+  let s='';
+  // CW start (05:00 fixed)
+  s+=`<div class="stop depot"><div class="num">▶</div><div class="lbl"><b>${CW.label}</b><span>depart ${hhmm(departCW)}</span></div><div class="times"><span class="etd">ETD ${hhmm(departCW)}</span></div></div>`;
+  depotStops.filter(st=>st.atDepot.startsWith('CW')).forEach(st=>{
+    s+=`<div class="stop pick"><div class="num">⬤</div><div class="lbl"><b>Job ${jobs.findIndex(j=>j.id===st.job.id)+1} pickup</b><span>${st.addr} — loaded at start</span></div></div>`;
+  });
+  // TW cage drop
+  s+=`<div class="stop depot"><div class="num">TW</div><div class="lbl"><b>${TW.label}</b><span>cage drop · drive ${cwtwMin}m from CW</span></div><div class="times"><span class="eta">ETA ${hhmm(twArrival)}</span><br><span class="etd">start ${hhmm(startClock)}</span></div></div>`;
+  depotStops.filter(st=>st.atDepot.startsWith('TW')).forEach(st=>{
+    s+=`<div class="stop pick"><div class="num">⬤</div><div class="lbl"><b>Job ${jobs.findIndex(j=>j.id===st.job.id)+1} pickup</b><span>${st.addr} — loaded at TW drop</span></div></div>`;
+  });
+  stopsTimed.forEach((st,i)=>{
+    const jobN=jobs.findIndex(j=>j.id===st.job.id)+1;
+    s+=`<div class="stop ${st.type}" draggable="true" data-i="${i}">
+      <div class="num">${i+1}</div>
+      <div class="lbl"><b>Job ${jobN} ${st.type==='pick'?'pickup':'delivery'}${st.timed?' ⏱':''}</b><span>${st.addr} · drive ${st.driveMin}m</span></div>
+      <div class="mv"><button onclick="moveStop(${i},-1)">▲</button><button onclick="moveStop(${i},1)">▼</button></div>
+      <div class="times"><span class="eta">ETA ${hhmm(st.eta)}</span><br><span class="clk">${st.service}m</span><br><span class="etd">ETD ${hhmm(st.etd)}</span></div>
+    </div>`;
+  });
+  s+=`<div class="stop depot"><div class="num">■</div><div class="lbl"><b>${CW.label}</b><span>return · drive ${backMin}m</span></div><div class="times"><span class="eta">ETA ${hhmm(finishClock)}</span></div></div>`;
+  sd.innerHTML=s;
+  enableDrag();
+}
+
+/* ---------- reordering ---------- */
+window.moveStop=(i,dir)=>{
+  const j=i+dir; if(j<0||j>=lastDisplaySeq.length)return;
+  const arr=lastDisplaySeq.slice();
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  enforcePrecedence(arr);
+  lockAndRedraw(arr);
+};
+function enableDrag(){
+  const items=[...document.querySelectorAll('.stop[draggable="true"]')];
+  let dragEl=null;
+  items.forEach(it=>{
+    it.addEventListener('dragstart',()=>{dragEl=it;it.classList.add('dragging');});
+    it.addEventListener('dragend',()=>{it.classList.remove('dragging');
+      const order=[...document.querySelectorAll('.stop[draggable="true"]')].map(x=>+x.dataset.i);
+      const arr=order.map(idx=>lastDisplaySeq[idx]); enforcePrecedence(arr); lockAndRedraw(arr);});
+    it.addEventListener('dragover',e=>{e.preventDefault();
+      const after=getAfter(it.parentNode,e.clientY);
+      if(after==null)it.parentNode.appendChild(dragEl); else it.parentNode.insertBefore(dragEl,after);});
+  });
+}
+function getAfter(container,y){
+  const els=[...container.querySelectorAll('.stop[draggable="true"]:not(.dragging)')];
+  return els.reduce((c,child)=>{const b=child.getBoundingClientRect();const off=y-b.top-b.height/2;
+    if(off<0&&off>c.offset)return{offset:off,element:child};return c;},{offset:-Infinity}).element||null;
+}
+function lockAndRedraw(arr){
+  manualOrder=arr.map(stopKey);   // lock this order
+  drawRoute(arr);                 // redraw map + recompute times in this exact order
+}
+
+/* Smart optimize: clear the manual lock and re-plan (Google re-optimizes) */
+document.getElementById('opt-btn').onclick=()=>{ manualOrder=null; planDay(); };
 
 /* ---------- clear ---------- */
 document.getElementById('clear-all').onclick=async ()=>{
