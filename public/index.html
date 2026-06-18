@@ -9,106 +9,116 @@
     --bg:#0e0f13; --panel:#16181f; --panel2:#1c1f28; --line:#2a2e3a;
     --txt:#e7e9ee; --muted:#9aa0ad; --faint:#6b7280;
     --amber:#f5c518; --amber-dim:#caa413;
-    --green:#34d399; --green-bg:#13261f;
-    --red:#f87171; --red-bg:#2a1717; --blue:#60a5fa;
+    --green:#34d399; --green-bg:#13261f; --red:#f87171; --red-bg:#2a1717; --blue:#60a5fa; --purple:#c4a3e8;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5}
-  header{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--line)}
-  .logo{width:40px;height:40px;border-radius:9px;background:var(--amber);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-weight:800;font-size:19px}
-  header h1{margin:0;font-size:19px;letter-spacing:.5px;font-weight:800}
-  header p{margin:0;font-size:11px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5}
+  header{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line)}
+  .logo{width:38px;height:38px;border-radius:9px;background:var(--amber);display:flex;align-items:center;justify-content:center;color:#1a1a1a;font-weight:800;font-size:18px}
+  header h1{margin:0;font-size:18px;letter-spacing:.5px;font-weight:800}
+  header p{margin:0;font-size:11px;color:var(--muted);letter-spacing:1.1px;text-transform:uppercase}
   .keystate{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
-  .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)}
-  .dot.on{background:var(--green)} .dot.off{background:var(--red)}
-  .wrap{display:grid;grid-template-columns:340px 1fr 360px;min-height:calc(100vh - 73px)}
-  @media(max-width:1100px){.wrap{grid-template-columns:1fr}}
-  .col{padding:18px 20px;overflow:auto}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--faint)} .dot.on{background:var(--green)} .dot.off{background:var(--red)}
+  .wrap{display:grid;grid-template-columns:330px 1fr 360px;min-height:calc(100vh - 67px)}
+  @media(max-width:1150px){.wrap{grid-template-columns:1fr}}
+  .col{padding:16px 18px;overflow:auto}
   .col.add{border-right:1px solid var(--line)}
-  .col.mapcol{padding:0;position:relative;min-height:420px}
+  .col.mapcol{padding:0;position:relative;min-height:380px}
   .col.side{background:var(--panel);border-left:1px solid var(--line)}
   #map{position:absolute;inset:0;background:#0a0b0e}
-  @media(max-width:1100px){.col.mapcol{min-height:420px}#map{position:absolute}}
-  h2.section{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:700}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin-bottom:13px}
+  h2.section{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:0 0 11px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px;margin-bottom:12px}
   .jobcard{border-left:3px solid var(--amber)}
-  label{display:block;font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:0 0 5px}
-  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px 11px;font-size:14px;font-family:inherit}
+  label{display:block;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+  input,select{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-family:inherit}
   input:focus,select:focus{outline:none;border-color:var(--amber-dim)}
-  .row{display:grid;gap:9px;margin-bottom:10px}
-  .r2{grid-template-columns:1fr 1fr}
-  button{font-family:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:9px 13px;font-size:14px;font-weight:600}
+  .row{display:grid;gap:8px;margin-bottom:9px} .r2{grid-template-columns:1fr 1fr} .r3{grid-template-columns:1fr 1fr 1fr}
+  button{font-family:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:8px 12px;font-size:14px;font-weight:600}
   button:hover{border-color:var(--amber-dim)}
-  .btn-amber{background:var(--amber);color:#1a1a1a;border-color:var(--amber);font-weight:700}
-  .btn-amber:hover{background:var(--amber-dim);border-color:var(--amber-dim)}
+  .btn-amber{background:var(--amber);color:#1a1a1a;border-color:var(--amber);font-weight:700} .btn-amber:hover{background:var(--amber-dim)}
   .btn-amber:disabled{opacity:.5;cursor:not-allowed}
   .btn-ghost{background:transparent;color:var(--muted)}
-  .btn-x{background:transparent;border-color:transparent;color:var(--faint);padding:6px}
-  .btn-x:hover{color:var(--red)}
-  .mach-row{display:grid;grid-template-columns:1fr 64px 28px;gap:7px;align-items:center;margin-bottom:7px}
-  .job-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;border-left:3px solid var(--blue)}
+  .btn-x{background:transparent;border-color:transparent;color:var(--faint);padding:5px} .btn-x:hover{color:var(--red)}
+  .mach-row{display:grid;grid-template-columns:1fr 56px 26px;gap:6px;align-items:center;margin-bottom:6px}
+  .chk{display:flex;align-items:center;gap:7px;margin:6px 0} .chk input{width:auto}
+  .job-item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--blue)}
+  .job-item.timed{border-left-color:var(--amber)}
   .job-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .tag{font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:#23304a;color:var(--blue);font-weight:700}
-  .job-meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55}
-  .empty{color:var(--faint);font-size:13px;text-align:center;padding:24px 10px;border:1px dashed var(--line);border-radius:10px}
-  /* stops list */
-  .stop{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin-bottom:7px;cursor:grab}
-  .stop.dragging{opacity:.4} .stop.depot{border-left:3px solid var(--amber);cursor:default}
-  .stop .num{width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--txt);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .stop.pick .num{background:#1f4d3a;color:var(--green)} .stop.drop .num{background:#3a2350;color:#c4a3e8}
-  .stop .lbl{flex:1;min-width:0}
-  .stop .lbl b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{font-size:10px;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:#23304a;color:var(--blue);font-weight:700}
+  .tag.t{background:#3a3115;color:var(--amber)}
+  .job-meta{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .empty{color:var(--faint);font-size:13px;text-align:center;padding:22px 10px;border:1px dashed var(--line);border-radius:10px}
+  /* calendar */
+  .cal{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px}
+  .cal .day{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 7px;cursor:pointer;min-height:62px}
+  .cal .day:hover{border-color:var(--amber-dim)}
+  .cal .day.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+  .cal .day .d{font-size:11px;color:var(--muted)} .cal .day .n{font-size:16px;font-weight:700}
+  .cal .day .cnt{font-size:10px;margin-top:3px;color:var(--blue)}
+  .cal .day.full .cnt{color:var(--red)} .cal .day.ok .cnt{color:var(--green)}
+  .navrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+  .navrow b{font-size:13px}
+  /* stops */
+  .stop{display:flex;align-items:center;gap:9px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:6px}
+  .stop.depot{border-left:3px solid var(--amber)}
+  .stop .num{width:21px;height:21px;border-radius:50%;background:var(--line);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .stop.pick .num{background:#1f4d3a;color:var(--green)} .stop.drop .num{background:#3a2350;color:var(--purple)}
+  .stop .lbl{flex:1;min-width:0} .stop .lbl b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .stop .lbl span{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-  .stop .mv{display:flex;flex-direction:column;gap:1px}
-  .stop .mv button{padding:1px 6px;font-size:11px;line-height:1.3;border-radius:5px}
   .stop .drive{font-size:11px;color:var(--blue);flex-shrink:0}
-  .verdict{border-radius:12px;padding:16px 18px;margin-bottom:14px;border:1px solid var(--line)}
-  .verdict.one{background:var(--green-bg);border-color:#1f4d3a}
-  .verdict.two{background:var(--red-bg);border-color:#4d2222}
-  .verdict h3{margin:0 0 3px;font-size:21px}
-  .verdict.one h3{color:var(--green)} .verdict.two h3{color:var(--red)}
-  .verdict p{margin:0;font-size:13px;color:var(--muted)}
-  .stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
-  .stat:last-child{border-bottom:none} .stat .v{font-weight:700}
-  .reason{font-size:12px;color:var(--muted);margin-top:6px;padding-left:14px;position:relative}
-  .reason:before{content:"\203A";position:absolute;left:0;color:var(--amber)}
-  .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
-  .bar>i{display:block;height:100%;background:var(--amber)} .bar.over>i{background:var(--red)}
-  .hint{font-size:11px;color:var(--faint);margin-top:9px;line-height:1.55}
+  .stop .eta{font-size:11px;color:var(--amber);flex-shrink:0;margin-left:5px}
+  .verdict{border-radius:11px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--line)}
+  .verdict.one{background:var(--green-bg);border-color:#1f4d3a} .verdict.two{background:var(--red-bg);border-color:#4d2222}
+  .verdict h3{margin:0 0 2px;font-size:20px} .verdict.one h3{color:var(--green)} .verdict.two h3{color:var(--red)}
+  .verdict p{margin:0;font-size:12px;color:var(--muted)}
+  .stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px} .stat:last-child{border-bottom:none} .stat .v{font-weight:700}
+  .reason{font-size:12px;color:var(--muted);margin-top:5px;padding-left:13px;position:relative} .reason:before{content:"\203A";position:absolute;left:0;color:var(--amber)}
+  .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px} .bar>i{display:block;height:100%;background:var(--amber)} .bar.over>i{background:var(--red)}
+  .hint{font-size:11px;color:var(--faint);margin-top:8px;line-height:1.5}
   .warn{font-size:12px;color:var(--red);margin-top:6px}
-  .toolbar{display:flex;gap:8px;margin-bottom:13px}
-  .toolbar button{flex:1}
-  .banner{position:absolute;top:12px;left:12px;right:12px;z-index:5;background:#2a1717;border:1px solid #4d2222;color:#fca5a5;font-size:12px;padding:10px 12px;border-radius:9px;display:none}
+  .banner{position:absolute;top:10px;left:10px;right:10px;z-index:5;background:#2a1717;border:1px solid #4d2222;color:#fca5a5;font-size:12px;padding:9px 11px;border-radius:9px;display:none}
+  .toolbar{display:flex;gap:7px;margin-bottom:11px} .toolbar button{flex:1}
+  .note{background:#13261f;border:1px solid #1f4d3a;color:#a7f3d0;font-size:12px;padding:9px 11px;border-radius:9px;margin-bottom:11px;display:none}
   .pac-container{z-index:9999!important}
+  .small{font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">AV</div>
-  <div><h1>ROUTE PLANNER</h1><p>Delivery routing &amp; truck allocation</p></div>
+  <div><h1>ROUTE PLANNER</h1><p>Scheduling &amp; truck allocation</p></div>
   <div class="keystate"><span class="dot" id="keydot"></span><span id="keytxt">checking…</span></div>
 </header>
 
 <div class="wrap">
-  <!-- LEFT: add job + job list -->
+  <!-- LEFT: book a job -->
   <div class="col add">
-    <h2 class="section">Add a job</h2>
+    <h2 class="section">Book a delivery job</h2>
     <div class="card jobcard">
-      <div class="row"><div><label>Pickup address</label><input id="f-pick" placeholder="Start typing an address…" autocomplete="off" /></div></div>
-      <div class="row"><div><label>Delivery address</label><input id="f-drop" placeholder="Start typing an address…" autocomplete="off" /></div></div>
+      <div class="row"><div><label>Pickup address</label><input id="f-pick" placeholder="Start typing…" autocomplete="off"/></div></div>
+      <div class="row"><div><label>Delivery address</label><input id="f-drop" placeholder="Start typing…" autocomplete="off"/></div></div>
       <div class="row r2">
-        <div><label>Pickups</label><input id="f-npick" type="number" min="0" value="1" /></div>
-        <div><label>Deliveries</label><input id="f-ndrop" type="number" min="0" value="1" /></div>
+        <div><label>Pickups</label><input id="f-npick" type="number" min="0" value="1"/></div>
+        <div><label>Deliveries</label><input id="f-ndrop" type="number" min="0" value="1"/></div>
       </div>
-      <label>Machines on this job</label>
+      <label>Machines</label>
       <div id="mach-rows"></div>
-      <button class="btn-ghost" id="add-mach" style="margin:1px 0 11px;font-size:13px">+ add machine</button>
-      <button class="btn-amber" id="add-job" style="width:100%">Add job to plan</button>
-      <div class="hint">Pick addresses from the dropdown so coordinates are captured. Service time = 30 min/pickup + 30 min/delivery. Day window = 8 h after the ~07:00 Tullamarine drop. Capacity: 7.72 m² floor, 2,000 kg (Truck 16 ARV).</div>
+      <button class="btn-ghost" id="add-mach" style="margin:0 0 9px;font-size:13px">+ add machine</button>
+      <div class="chk"><input type="checkbox" id="f-timed"/><label for="f-timed" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Timed delivery (priority)</label></div>
+      <div class="row r2" id="timed-fields" style="display:none">
+        <div><label>Window from</label><input id="f-tfrom" type="time" value="09:00"/></div>
+        <div><label>Window to</label><input id="f-tto" type="time" value="11:00"/></div>
+      </div>
+      <div class="row"><div><label>Requested date</label><input id="f-date" type="date"/></div></div>
+      <button class="btn-amber" id="add-job" style="width:100%">Find date &amp; book</button>
+      <div class="hint">Start CW (05:00) → TW cage drop → load-aware run → end CW. One truck/day, 8-hour window. If the requested date is full, it auto-rolls to the next weekday that fits. Jobs are saved and survive reload.</div>
     </div>
-    <h2 class="section" style="margin-top:18px">Jobs (<span id="job-count">0</span>)</h2>
-    <div id="joblist"><div class="empty">No jobs yet.</div></div>
+    <div class="card" style="padding:11px 13px">
+      <label>Starting cages on board after TW drop</label>
+      <input id="f-cages" type="number" min="0" value="2"/>
+      <div class="hint" style="margin-top:6px">Cages are 1050×850 mm each and occupy truck floor until the first delivery frees space.</div>
+    </div>
+    <button class="btn-ghost" id="clear-all" style="width:100%;font-size:12px">Clear all saved jobs</button>
   </div>
 
   <!-- CENTRE: map -->
@@ -117,16 +127,19 @@
     <div id="map"></div>
   </div>
 
-  <!-- RIGHT: stops + result -->
+  <!-- RIGHT: calendar + day route -->
   <div class="col side">
-    <h2 class="section">Route stops</h2>
+    <h2 class="section">Schedule (Mon–Fri)</h2>
+    <div class="note" id="booknote"></div>
+    <div class="navrow"><button class="btn-ghost" id="wk-prev">‹ prev</button><b id="wk-label"></b><button class="btn-ghost" id="wk-next">next ›</button></div>
+    <div class="cal" id="cal"></div>
+    <h2 class="section" style="margin-top:16px">Selected day <span id="sel-label" class="small"></span></h2>
     <div class="toolbar">
-      <button class="btn-amber" id="smart-btn">⚡ Smart Optimize</button>
-      <button class="btn-ghost" id="recalc-btn">↻ Recalculate</button>
+      <button class="btn-amber" id="plan-btn">⚡ Plan day</button>
     </div>
-    <div id="stops"><div class="empty">Add jobs, then plan.</div></div>
-    <h2 class="section" style="margin-top:18px">Result</h2>
-    <div id="result"><div class="empty">No route yet.</div></div>
+    <div id="result"><div class="empty">Pick a day, then Plan day.</div></div>
+    <h2 class="section" style="margin-top:16px">Route stops</h2>
+    <div id="stops"><div class="empty">No route yet.</div></div>
   </div>
 </div>
 
@@ -137,63 +150,64 @@ const CATALOG={
   "M6000 — 6 wide":{w:1215,d:830,kg:395},"Coffee Machine":{w:600,d:740,kg:130},
   "Single Door Freezer":{w:680,d:720,kg:110},"Double Door Freezer":{w:1300,d:830,kg:220},
 };
+const CAGE={w:1050,d:850};                 // mm — occupies floor
 const TRUCK={floorM2:7.72,maxKg:2000};
+const FULL_FRAC=0.85;                        // truck considered "full" at this floor or weight fraction
 const WINDOW_MIN=8*60, PICK_MIN=30, DROP_MIN=30;
-const DEPOT={label:"Tullamarine warehouse", addr:"Tullamarine VIC 3043, Australia", lat:-37.6886, lng:144.8807};
+const DAY_START_MIN=7*60;                    // deliveries begin ~07:00 after the TW drop
+const CW={label:"Cranbourne West (CW)",addr:"7 Trade Way, Cranbourne West VIC 3977",lat:-38.0846,lng:145.2581};
+const TW={label:"Tullamarine warehouse (TW)",addr:"108 Sharps Road, Tullamarine VIC 3043",lat:-37.6975,lng:144.8569};
 
-let jobs=[];          // {pick:{addr,lat,lng}, drop:{addr,lat,lng}, npick, ndrop, machines:[{model,qty}]}
-let stops=[];         // ordered working list of {jobIdx, type:'pick'|'drop', addr, lat, lng, label}
+let jobs=[];           // persisted: {id, pick, drop, npick, ndrop, machines, timed, tfrom, tto, date(YYYY-MM-DD)}
 let mapsReady=false, map, directionsService, directionsRenderer, geocoder;
+let weekStart=mondayOf(new Date());
+let selectedDate=null;
+let lastRouteStops=[];
 
-/* ---------- load Google Maps JS with the browser key from the server ---------- */
+/* ---------- persistence (localStorage — works in any browser) ---------- */
+async function loadJobs(){
+  try{ const raw=localStorage.getItem('arv_jobs'); jobs = raw ? JSON.parse(raw) : []; }
+  catch(e){ jobs=[]; }
+}
+async function saveJobs(){
+  try{ localStorage.setItem('arv_jobs', JSON.stringify(jobs)); }catch(e){ console.warn('save failed',e); }
+}
+
+/* ---------- keys + maps ---------- */
 fetch('/api/health').then(r=>r.json()).then(d=>{
-  const dot=document.getElementById('keydot'), txt=document.getElementById('keytxt');
-  if(d.keyConfigured && d.browserKeyConfigured){dot.className='dot on';txt.textContent='keys active';}
-  else if(d.browserKeyConfigured){dot.className='dot on';txt.textContent='map key active';}
-  else {dot.className='dot off';txt.textContent='no browser key — set GOOGLE_MAPS_BROWSER_KEY';}
+  const dot=document.getElementById('keydot'),txt=document.getElementById('keytxt');
+  if(d.browserKeyConfigured){dot.className='dot on';txt.textContent='keys active';}
+  else{dot.className='dot off';txt.textContent='no browser key';}
 });
 fetch('/api/config').then(r=>r.json()).then(cfg=>{
-  if(!cfg.browserKey){ showBanner("No browser maps key configured. Set GOOGLE_MAPS_BROWSER_KEY in Render's Environment tab (a referrer-restricted key)."); return; }
+  if(!cfg.browserKey){showBanner("No browser maps key. Set GOOGLE_MAPS_BROWSER_KEY in Render.");return;}
   const s=document.createElement('script');
   s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(cfg.browserKey)}&libraries=places&callback=initMaps`;
-  s.async=true; s.defer=true;
-  s.onerror=()=>showBanner("Google Maps failed to load — check the browser key and that Maps JavaScript API + Places API are enabled.");
+  s.async=true;s.defer=true;s.onerror=()=>showBanner("Google Maps failed to load.");
   document.head.appendChild(s);
 });
-
-function showBanner(msg){const b=document.getElementById('map-banner');b.textContent=msg;b.style.display='block';}
+function showBanner(m){const b=document.getElementById('map-banner');b.textContent=m;b.style.display='block';}
 function hideBanner(){document.getElementById('map-banner').style.display='none';}
 
+let picked={pick:null,drop:null};
 window.initMaps=function(){
   mapsReady=true;
   map=new google.maps.Map(document.getElementById('map'),{
-    center:{lat:DEPOT.lat,lng:DEPOT.lng}, zoom:9, mapTypeControl:false, streetViewControl:false,
-    styles:[ {elementType:"geometry",stylers:[{color:"#1c1f28"}]},
-      {elementType:"labels.text.stroke",stylers:[{color:"#0e0f13"}]},
-      {elementType:"labels.text.fill",stylers:[{color:"#9aa0ad"}]},
-      {featureType:"road",elementType:"geometry",stylers:[{color:"#2a2e3a"}]},
-      {featureType:"water",elementType:"geometry",stylers:[{color:"#0a0b0e"}]},
-      {featureType:"poi",stylers:[{visibility:"off"}]} ]
+    center:{lat:-37.9,lng:145.05},zoom:9,mapTypeControl:false,streetViewControl:false,
+    styles:[{elementType:"geometry",stylers:[{color:"#1c1f28"}]},{elementType:"labels.text.stroke",stylers:[{color:"#0e0f13"}]},
+    {elementType:"labels.text.fill",stylers:[{color:"#9aa0ad"}]},{featureType:"road",elementType:"geometry",stylers:[{color:"#2a2e3a"}]},
+    {featureType:"water",elementType:"geometry",stylers:[{color:"#0a0b0e"}]},{featureType:"poi",stylers:[{visibility:"off"}]}]
   });
   directionsService=new google.maps.DirectionsService();
-  directionsRenderer=new google.maps.DirectionsRenderer({map, suppressMarkers:false,
-    polylineOptions:{strokeColor:"#f5c518",strokeWeight:5,strokeOpacity:.9}});
+  directionsRenderer=new google.maps.DirectionsRenderer({map,suppressMarkers:false,polylineOptions:{strokeColor:"#f5c518",strokeWeight:5,strokeOpacity:.9}});
   geocoder=new google.maps.Geocoder();
-  attachAutocomplete(document.getElementById('f-pick'),'pick');
-  attachAutocomplete(document.getElementById('f-drop'),'drop');
+  attachAC(document.getElementById('f-pick'),'pick');
+  attachAC(document.getElementById('f-drop'),'drop');
   hideBanner();
 };
-
-let picked={pick:null,drop:null};
-function attachAutocomplete(input,which){
-  const ac=new google.maps.places.Autocomplete(input,{
-    fields:['formatted_address','geometry'],
-    componentRestrictions:{country:'au'}
-  });
-  ac.addListener('place_changed',()=>{
-    const p=ac.getPlace();
-    if(p.geometry){ picked[which]={addr:p.formatted_address, lat:p.geometry.location.lat(), lng:p.geometry.location.lng()}; }
-  });
+function attachAC(input,which){
+  const ac=new google.maps.places.Autocomplete(input,{fields:['formatted_address','geometry'],componentRestrictions:{country:'au'}});
+  ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p.geometry)picked[which]={addr:p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng()};});
 }
 
 /* ---------- machines sub-form ---------- */
@@ -206,205 +220,287 @@ function machRowHTML(){
 }
 document.getElementById('add-mach').onclick=()=>machRows.appendChild(machRowHTML());
 machRows.appendChild(machRowHTML());
+document.getElementById('f-timed').onchange=e=>document.getElementById('timed-fields').style.display=e.target.checked?'grid':'none';
 
-/* ---------- add job ---------- */
-document.getElementById('add-job').onclick=()=>{
+/* ---------- load helpers ---------- */
+function machArea(m){const s=CATALOG[m.model];return s?(s.w/1000)*(s.d/1000)*m.qty:0;}
+function machKg(m){const s=CATALOG[m.model];return s?s.kg*m.qty:0;}
+function jobArea(j){return j.machines.reduce((s,m)=>s+machArea(m),0);}
+function jobKg(j){return j.machines.reduce((s,m)=>s+machKg(m),0);}
+function jobService(j){return j.npick*PICK_MIN+j.ndrop*DROP_MIN;}
+function cageArea(n){return n*(CAGE.w/1000)*(CAGE.d/1000);}
+function fmt(min){min=Math.round(min);const h=Math.floor(min/60),m=min%60;return(h?h+'h ':'')+(m?m+'m':(h?'':'0m'));}
+function hhmm(min){min=Math.round(min);let h=Math.floor(min/60),m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+function timeToMin(t){if(!t)return null;const[a,b]=t.split(':').map(Number);return a*60+b;}
+
+/* ---------- dates ---------- */
+function mondayOf(d){d=new Date(d);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);d.setHours(0,0,0,0);return d;}
+function ymd(d){return d.toISOString().slice(0,10);}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function isWeekday(d){const g=d.getDay();return g>=1&&g<=5;}
+function fmtDate(d){return d.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});}
+
+/* ---------- distance cache (straight-line proxy for the fit pre-check) ---------- */
+function haversineMin(a,b){
+  if(a.lat==null||b.lat==null)return 20; // fallback
+  const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180;
+  const la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;
+  const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;
+  const km=2*R*Math.asin(Math.sqrt(h));
+  return Math.max(6, km/40*60); // ~40 km/h effective metro avg
+}
+
+/* ============================================================
+   LOAD-AWARE SEQUENCER
+   Build the ordered stop list for one day's jobs, starting at TW.
+   Rules: timed deliveries prioritised; collect pickups while truck has room;
+   when "full", go deliver; pickup always before its own delivery.
+   Returns [{job, type:'pick'|'drop', addr, lat, lng, label, timed, tfrom, tto}]
+   ============================================================ */
+function sequence(dayJobs, startCages){
+  // node list
+  const picks = dayJobs.filter(j=>j.pick).map(j=>({job:j,type:'pick',...j.pick,done:false}));
+  const drops = dayJobs.filter(j=>j.drop).map(j=>({job:j,type:'drop',...j.drop,done:false,timed:j.timed,tfrom:timeToMin(j.tfrom),tto:timeToMin(j.tto)}));
+  const onboard=[]; // job ids currently loaded (picked, not yet delivered)
+  const seq=[];
+  let cur={lat:TW.lat,lng:TW.lng};
+  let clock=DAY_START_MIN;
+  let cageFloor=cageArea(startCages||0);
+  let usedArea=0, usedKg=0;
+
+  function loadFrac(){return Math.max((usedArea+cageFloor)/TRUCK.floorM2, usedKg/TRUCK.maxKg);}
+  function isFull(){return loadFrac()>=FULL_FRAC;}
+  function nearest(list){let best=null,bd=Infinity;list.forEach(n=>{if(n.done)return;const d=haversineMin(cur,n);if(d<bd){bd=d;best=n;}});return best?{node:best,mins:bd}:null;}
+
+  const totalStops=picks.length+drops.length;
+  let guard=0;
+  while(seq.length<totalStops && guard++<500){
+    // 1) timed deliveries whose window is approaching — prioritise the most urgent ready one
+    const readyTimed=drops.filter(d=>!d.done&&d.timed&&onboard.includes(d.job.id));
+    if(readyTimed.length){
+      readyTimed.sort((a,b)=>(a.tto||1e9)-(b.tto||1e9));
+      const t=readyTimed[0];
+      go(t,'drop'); continue;
+    }
+    const pickAvail=picks.some(p=>!p.done);
+    const dropAvail=drops.some(d=>!d.done&&onboard.includes(d.job.id));
+
+    if(isFull() && dropAvail){ const n=nearest(drops.filter(d=>onboard.includes(d.job.id))); if(n){go(n.node,'drop');continue;} }
+    if(pickAvail){
+      // pick nearest pickup that still fits the truck
+      const candidates=picks.filter(p=>!p.done && (usedArea+jobArea(p.job)+cageFloor)<=TRUCK.floorM2 && (usedKg+jobKg(p.job))<=TRUCK.maxKg);
+      const n=nearest(candidates.length?candidates:[]);
+      if(n){go(n.node,'pick');continue;}
+    }
+    if(dropAvail){ const n=nearest(drops.filter(d=>onboard.includes(d.job.id))); if(n){go(n.node,'drop');continue;} }
+    // nothing pickable (e.g. would overflow) but pickups remain -> force a delivery if possible else break
+    if(dropAvail){const n=nearest(drops.filter(d=>onboard.includes(d.job.id)));if(n){go(n.node,'drop');continue;}}
+    break;
+  }
+
+  function go(node,type){
+    const mins=haversineMin(cur,node);
+    clock+=mins;
+    if(type==='pick'){ usedArea+=jobArea(node.job); usedKg+=jobKg(node.job); onboard.push(node.job.id); clock+=PICK_MIN; }
+    else { const i=onboard.indexOf(node.job.id); if(i>=0)onboard.splice(i,1); usedArea-=jobArea(node.job); usedKg-=jobKg(node.job); if(usedArea<0)usedArea=0; if(usedKg<0)usedKg=0; cageFloor=0; clock+=DROP_MIN; }
+    node.done=true; cur={lat:node.lat,lng:node.lng};
+    seq.push({...node, driveMin:Math.round(mins), eta:clock});
+  }
+  // final leg back to CW
+  const back=haversineMin(cur,CW);
+  return {seq, totalMin:(clock-DAY_START_MIN)+back, backMin:Math.round(back)};
+}
+
+/* ---------- booking: find next weekday that fits ---------- */
+function jobsOn(date){return jobs.filter(j=>j.date===date);}
+
+function dayFits(dayJobs){
+  // capacity pre-check using the sequencer's estimated total time + per-job truck fit
+  if(!dayJobs.length)return {fits:true, totalMin:0};
+  const cages=+document.getElementById('f-cages').value||0;
+  const oversize=dayJobs.some(j=>jobArea(j)>TRUCK.floorM2||jobKg(j)>TRUCK.maxKg);
+  const {totalMin}=sequence(dayJobs,cages);
+  const service=dayJobs.reduce((s,j)=>s+jobService(j),0);
+  const total=service+totalMin; // totalMin already includes service via clock; recompute cleanly:
+  // sequence() clock already added service; so use totalMin directly as the day length estimate
+  const dayLen=totalMin;
+  return {fits: dayLen<=WINDOW_MIN && !oversize, totalMin:dayLen, oversize};
+}
+
+function findDate(requested, candidateJob){
+  let d=new Date(requested+'T00:00:00');
+  if(isNaN(d))d=new Date();
+  let guard=0;
+  while(guard++<60){
+    if(isWeekday(d)){
+      const ds=ymd(d);
+      const trial=[...jobsOn(ds), candidateJob];
+      if(dayFits(trial).fits) return ds;
+    }
+    d=addDays(d,1);
+  }
+  return ymd(d); // fallback
+}
+
+/* ---------- add/book a job ---------- */
+document.getElementById('add-job').onclick=async ()=>{
   const npick=+document.getElementById('f-npick').value||0;
   const ndrop=+document.getElementById('f-ndrop').value||0;
   const pickAddr=document.getElementById('f-pick').value.trim();
   const dropAddr=document.getElementById('f-drop').value.trim();
   const machines=[...machRows.querySelectorAll('.mach-row')].map(r=>({model:r.querySelector('.m-model').value,qty:+r.querySelector('.m-qty').value||1}));
+  const timed=document.getElementById('f-timed').checked;
+  const tfrom=document.getElementById('f-tfrom').value, tto=document.getElementById('f-tto').value;
+  const reqDate=document.getElementById('f-date').value||ymd(new Date());
   if(!pickAddr&&!dropAddr){alert('Enter at least a pickup or delivery address.');return;}
   if(npick===0&&ndrop===0){alert('Set at least one pickup or delivery.');return;}
-  // use the autocomplete-picked coords when available; else fall back to text (will be geocoded later)
-  const pick=pickAddr?(picked.pick&&picked.pick.addr===pickAddr?picked.pick:{addr:pickAddr,lat:null,lng:null}):null;
-  const drop=dropAddr?(picked.drop&&picked.drop.addr===dropAddr?picked.drop:{addr:dropAddr,lat:null,lng:null}):null;
-  jobs.push({pick,drop,npick,ndrop,machines});
+
+  const job={
+    id:'j'+Date.now()+Math.floor(Math.random()*999),
+    pick: pickAddr?(picked.pick&&picked.pick.addr===pickAddr?picked.pick:{addr:pickAddr,lat:null,lng:null}):null,
+    drop: dropAddr?(picked.drop&&picked.drop.addr===dropAddr?picked.drop:{addr:dropAddr,lat:null,lng:null}):null,
+    npick,ndrop,machines,timed,tfrom,tto,date:null
+  };
+  const assigned=findDate(reqDate, job);
+  job.date=assigned;
+  jobs.push(job); await saveJobs();
   picked={pick:null,drop:null};
   document.getElementById('f-pick').value='';document.getElementById('f-drop').value='';
   document.getElementById('f-npick').value=1;document.getElementById('f-ndrop').value=1;
+  document.getElementById('f-timed').checked=false;document.getElementById('timed-fields').style.display='none';
   machRows.innerHTML='';machRows.appendChild(machRowHTML());
-  rebuildStops(); renderJobs(); renderStops();
+
+  const note=document.getElementById('booknote');
+  if(assigned!==reqDate){ note.textContent=`Requested ${fmtDate(new Date(reqDate+'T00:00:00'))} was full — booked to ${fmtDate(new Date(assigned+'T00:00:00'))} (next available).`; }
+  else { note.textContent=`Booked for ${fmtDate(new Date(assigned+'T00:00:00'))}.`; }
+  note.style.display='block';
+  weekStart=mondayOf(new Date(assigned+'T00:00:00'));
+  selectedDate=assigned;
+  renderCal(); selectDay(assigned);
 };
 
-function jobLoad(j){let kg=0,area=0;j.machines.forEach(m=>{const s=CATALOG[m.model];if(!s)return;kg+=s.kg*m.qty;area+=(s.w/1000)*(s.d/1000)*m.qty;});return{kg,area};}
-function jobMachineCount(j){return j.machines.reduce((s,m)=>s+m.qty,0);}
-function jobServiceTime(j){return j.npick*PICK_MIN+j.ndrop*DROP_MIN;}
-function fitsTruck(j){const l=jobLoad(j);return l.kg<=TRUCK.maxKg&&l.area<=TRUCK.floorM2;}
-function fmt(min){min=Math.round(min);const h=Math.floor(min/60),m=min%60;return(h?h+'h ':'')+(m?m+'m':(h?'':'0m'));}
-
-function renderJobs(){
-  document.getElementById('job-count').textContent=jobs.length;
-  const list=document.getElementById('joblist');
-  if(!jobs.length){list.innerHTML='<div class="empty">No jobs yet.</div>';return;}
-  list.innerHTML=jobs.map((j,i)=>{
-    const ld=jobLoad(j),mc=jobMachineCount(j);
-    const machTxt=j.machines.map(m=>`${m.qty}× ${m.model}`).join(', ')||'—';
-    const route=[j.pick&&('Pick: '+j.pick.addr),j.drop&&('Drop: '+j.drop.addr)].filter(Boolean).join(' • ');
-    return `<div class="job-item"><div class="job-head"><strong>Job ${i+1}</strong>
-      <span class="tag">${j.npick}P / ${j.ndrop}D</span><button class="btn-x" onclick="delJob(${i})">✕</button></div>
-      <div class="job-meta">${route||'—'}<br>${machTxt}<br>${mc} machine(s) · ${Math.round(ld.kg)} kg · ${ld.area.toFixed(2)} m² · service ${jobServiceTime(j)} min</div></div>`;
-  }).join('');
-}
-window.delJob=i=>{jobs.splice(i,1);rebuildStops();renderJobs();renderStops();};
-
-/* ---------- stops: build from jobs, keeping pickup before its delivery ---------- */
-function rebuildStops(){
-  stops=[];
-  jobs.forEach((j,i)=>{
-    if(j.pick) stops.push({jobIdx:i,type:'pick',addr:j.pick.addr,lat:j.pick.lat,lng:j.pick.lng,label:`Job ${i+1} pickup`});
-    if(j.drop) stops.push({jobIdx:i,type:'drop',addr:j.drop.addr,lat:j.drop.lat,lng:j.drop.lng,label:`Job ${i+1} delivery`});
-  });
-}
-
-/* enforce: each job's pickup index < its delivery index. minimal correction pass. */
-function enforcePrecedence(arr){
-  let changed=true, guard=0;
-  while(changed && guard++<50){
-    changed=false;
-    for(let i=0;i<arr.length;i++){
-      if(arr[i].type==='drop'){
-        const pickPos=arr.findIndex(s=>s.jobIdx===arr[i].jobIdx&&s.type==='pick');
-        if(pickPos>i){ // delivery before its pickup -> move pickup just before delivery
-          const [pk]=arr.splice(pickPos,1); arr.splice(i,0,pk); changed=true; break;
-        }
-      }
-    }
+/* ---------- calendar ---------- */
+document.getElementById('wk-prev').onclick=()=>{weekStart=addDays(weekStart,-7);renderCal();};
+document.getElementById('wk-next').onclick=()=>{weekStart=addDays(weekStart,7);renderCal();};
+function renderCal(){
+  document.getElementById('wk-label').textContent=`${fmtDate(weekStart)} – ${fmtDate(addDays(weekStart,4))}`;
+  const cal=document.getElementById('cal');cal.innerHTML='';
+  for(let i=0;i<5;i++){
+    const d=addDays(weekStart,i),ds=ymd(d);
+    const list=jobsOn(ds);
+    const fit=list.length?dayFits(list):{fits:true,totalMin:0};
+    const div=document.createElement('div');
+    div.className='day'+(selectedDate===ds?' sel':'')+(list.length?(fit.fits?' ok':' full'):'');
+    div.innerHTML=`<div class="d">${d.toLocaleDateString('en-AU',{weekday:'short'})}</div>
+      <div class="n">${d.getDate()}</div>
+      <div class="cnt">${list.length?list.length+' job'+(list.length>1?'s':'')+' · '+fmt(fit.totalMin):'—'}</div>`;
+    div.onclick=()=>selectDay(ds);
+    cal.appendChild(div);
   }
-  return arr;
+}
+function selectDay(ds){selectedDate=ds;document.getElementById('sel-label').textContent=fmtDate(new Date(ds+'T00:00:00'));renderCal();renderDayJobs();document.getElementById('result').innerHTML='<div class="empty">Press Plan day to route &amp; check.</div>';document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';}
+
+function renderDayJobs(){
+  // show the selected day's jobs in the left list area? We show them in result region header instead — keep stops/result clean.
 }
 
-function renderStops(){
-  const el=document.getElementById('stops');
-  if(!stops.length){el.innerHTML='<div class="empty">Add jobs, then plan.</div>';return;}
-  let html=`<div class="stop depot"><div class="num">▶</div><div class="lbl"><b>${DEPOT.label}</b><span>Start &amp; end</span></div></div>`;
-  stops.forEach((s,i)=>{
-    html+=`<div class="stop ${s.type}" draggable="true" data-i="${i}">
-      <div class="num">${i+1}</div>
-      <div class="lbl"><b>${s.label}</b><span>${s.addr}</span></div>
-      <div class="mv"><button onclick="moveStop(${i},-1)">▲</button><button onclick="moveStop(${i},1)">▼</button></div>
-    </div>`;
-  });
-  html+=`<div class="stop depot"><div class="num">■</div><div class="lbl"><b>${DEPOT.label}</b><span>Return</span></div></div>`;
-  el.innerHTML=html;
-  enableDrag();
-}
+/* ---------- plan the selected day (live Directions) ---------- */
+document.getElementById('plan-btn').onclick=()=>planDay();
+async function planDay(){
+  if(!selectedDate){alert('Pick a day first.');return;}
+  const dayJobs=jobsOn(selectedDate);
+  if(!dayJobs.length){document.getElementById('result').innerHTML='<div class="empty">No jobs on this day.</div>';return;}
+  if(!mapsReady){showBanner('Map not ready yet.');return;}
+  const btn=document.getElementById('plan-btn');btn.disabled=true;
+  await geocodeMissing(dayJobs);
 
-window.moveStop=(i,dir)=>{
-  const j=i+dir; if(j<0||j>=stops.length)return;
-  [stops[i],stops[j]]=[stops[j],stops[i]];
-  enforcePrecedence(stops);
-  renderStops(); planRoute();
-};
+  const cages=+document.getElementById('f-cages').value||0;
+  const {seq}=sequence(dayJobs,cages);
+  lastRouteStops=seq;
 
-function enableDrag(){
-  const items=[...document.querySelectorAll('.stop[draggable="true"]')];
-  let dragEl=null;
-  items.forEach(it=>{
-    it.addEventListener('dragstart',()=>{dragEl=it;it.classList.add('dragging');});
-    it.addEventListener('dragend',()=>{it.classList.remove('dragging');
-      const order=[...document.querySelectorAll('.stop[draggable="true"]')].map(x=>+x.dataset.i);
-      stops=order.map(idx=>stops[idx]); enforcePrecedence(stops); renderStops(); planRoute();});
-    it.addEventListener('dragover',e=>{e.preventDefault();
-      const after=getAfter(it.parentNode,e.clientY);
-      if(after==null)it.parentNode.appendChild(dragEl); else it.parentNode.insertBefore(dragEl,after);});
-  });
-}
-function getAfter(container,y){
-  const els=[...container.querySelectorAll('.stop[draggable="true"]:not(.dragging)')];
-  return els.reduce((closest,child)=>{
-    const box=child.getBoundingClientRect(); const offset=y-box.top-box.height/2;
-    if(offset<0&&offset>closest.offset)return{offset,element:child}; return closest;
-  },{offset:-Infinity}).element||null;
-}
-
-/* ---------- geocode any stops missing coords (typed, not picked) ---------- */
-function geocodeMissing(){
-  if(!mapsReady)return Promise.resolve();
-  const todo=stops.filter(s=>s.lat==null);
-  return Promise.all(todo.map(s=>new Promise(res=>{
-    geocoder.geocode({address:s.addr,componentRestrictions:{country:'AU'}},(r,status)=>{
-      if(status==='OK'&&r[0]){s.lat=r[0].geometry.location.lat();s.lng=r[0].geometry.location.lng();}
-      res();
-    });
-  })));
-}
-
-/* ---------- draw + measure the route via Directions ---------- */
-document.getElementById('recalc-btn').onclick=()=>planRoute();
-document.getElementById('smart-btn').onclick=()=>planRoute(true);
-
-async function planRoute(optimize=false){
-  if(!stops.length)return;
-  if(!mapsReady){showBanner("Map not ready — waiting for Google Maps to load.");return;}
-  const smart=document.getElementById('smart-btn'); smart.disabled=true;
-  await geocodeMissing();
-
-  const waypoints=stops.filter(s=>s.lat!=null).map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}));
-  if(waypoints.length===0){smart.disabled=false;return;}
-
+  // build Directions request: CW -> TW -> seq stops -> CW (keep our order, do NOT re-optimize)
+  const waypoints=[{location:{lat:TW.lat,lng:TW.lng},stopover:true},
+    ...seq.filter(s=>s.lat!=null).map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}))];
   directionsService.route({
-    origin:{lat:DEPOT.lat,lng:DEPOT.lng},
-    destination:{lat:DEPOT.lat,lng:DEPOT.lng},
-    waypoints, optimizeWaypoints:optimize, travelMode:google.maps.TravelMode.DRIVING
+    origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:CW.lat,lng:CW.lng},
+    waypoints, optimizeWaypoints:false, travelMode:google.maps.TravelMode.DRIVING
   },(result,status)=>{
-    smart.disabled=false;
-    if(status!=='OK'){showBanner("Directions request failed: "+status+". Check the Directions API is enabled & billing is on.");renderResult(null);return;}
+    btn.disabled=false;
+    if(status!=='OK'){showBanner('Directions failed: '+status);renderResult(dayJobs,null,null);return;}
     hideBanner();
     directionsRenderer.setDirections(result);
-
-    // if Google reordered, reflect it in our stops, then re-enforce precedence
-    const order=result.routes[0].waypoint_order;
-    if(optimize && order && order.length===stops.length){
-      stops=order.map(idx=>stops[idx]);
-      enforcePrecedence(stops);
-      renderStops();
-    }
     const legs=result.routes[0].legs;
     const totalDrive=legs.reduce((s,l)=>s+l.duration.value,0)/60;
-    // attach per-stop incoming drive time to the displayed stops (legs align to current order)
-    renderResult(totalDrive, legs);
+    renderResult(dayJobs, totalDrive, legs, seq);
   });
 }
 
-function renderResult(totalDrive, legs){
-  const res=document.getElementById('result');
-  const totalService=jobs.reduce((s,j)=>s+jobServiceTime(j),0);
-  if(totalDrive==null){res.innerHTML='<div class="warn">Could not calculate the route.</div>';return;}
-  const totalTime=totalService+totalDrive;
-  const reasons=[];
-  const timeOverflow=totalTime>WINDOW_MIN;
-  if(timeOverflow)reasons.push(`Total ${fmt(totalTime)} (${fmt(totalService)} service + ${fmt(totalDrive)} driving) exceeds the 8-hour window.`);
-  const oversize=jobs.filter(j=>!fitsTruck(j));
-  if(oversize.length)reasons.push(`${oversize.length} job(s) exceed one truck's floor/weight alone — split or review.`);
-  const dedicated=jobs.filter(j=>{const l=jobLoad(j);return fitsTruck(j)&&(l.kg/TRUCK.maxKg>=0.85||l.area/TRUCK.floorM2>=0.85);});
-  if(dedicated.length>=2)reasons.push(`${dedicated.length} jobs each need a near-full dedicated trip.`);
-  const needTwo=timeOverflow||dedicated.length>=2;
-
-  const pct=Math.min(100,Math.round(totalTime/WINDOW_MIN*100));
-  let html=`<div class="verdict ${needTwo?'two':'one'}"><h3>${needTwo?'Two trucks':'One truck'}</h3>
-    <p>${needTwo?'Allocate the second truck (driver on standby).':'Fits one truck within the 8-hour window.'}</p></div>
-    <div class="card" style="padding:13px 15px">
-    <div class="stat"><span>Jobs</span><span class="v">${jobs.length}</span></div>
-    <div class="stat"><span>Service time</span><span class="v">${fmt(totalService)}</span></div>
-    <div class="stat"><span>Driving (live)</span><span class="v">${fmt(totalDrive)}</span></div>
-    <div class="stat"><span>Total</span><span class="v">${fmt(totalTime)}</span></div>
-    <div class="stat"><span>Window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
-    <div class="bar ${timeOverflow?'over':''}"><i style="width:${pct}%"></i></div></div>`;
-  if(reasons.length)html+=`<div class="card" style="padding:13px 15px"><label style="margin-bottom:7px">Why</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
-  res.innerHTML=html;
-
-  // show incoming drive times on the stop rows
-  if(legs){
-    const rows=[...document.querySelectorAll('.stop[draggable="true"]')];
-    rows.forEach((row,i)=>{
-      const leg=legs[i]; // leg i = depot/prev -> stop i
-      if(leg){const d=document.createElement('div');d.className='drive';d.textContent=Math.round(leg.duration.value/60)+'m';row.appendChild(d);}
+function geocodeMissing(dayJobs){
+  const todo=[];
+  dayJobs.forEach(j=>{ if(j.pick&&j.pick.lat==null)todo.push(j.pick); if(j.drop&&j.drop.lat==null)todo.push(j.drop); });
+  return Promise.all(todo.map(pt=>new Promise(res=>{
+    geocoder.geocode({address:pt.addr,componentRestrictions:{country:'AU'}},(r,st)=>{
+      if(st==='OK'&&r[0]){pt.lat=r[0].geometry.location.lat();pt.lng=r[0].geometry.location.lng();}
+      res();
     });
-  }
+  }))).then(saveJobs);
 }
 
-renderJobs(); renderStops();
+function renderResult(dayJobs, totalDrive, legs, seq){
+  const res=document.getElementById('result');
+  const service=dayJobs.reduce((s,j)=>s+jobService(j),0);
+  if(totalDrive==null){res.innerHTML='<div class="warn">Could not calculate the route.</div>';return;}
+  const total=service+totalDrive;
+  const reasons=[];
+  const overflow=total>WINDOW_MIN;
+  if(overflow)reasons.push(`Day length ${fmt(total)} (${fmt(service)} service + ${fmt(totalDrive)} driving) exceeds the 8-hour window.`);
+  const oversize=dayJobs.filter(j=>jobArea(j)>TRUCK.floorM2||jobKg(j)>TRUCK.maxKg);
+  if(oversize.length)reasons.push(`${oversize.length} job(s) exceed one truck on their own — split/review.`);
+  const needTwo=overflow;
+  const pct=Math.min(100,Math.round(total/WINDOW_MIN*100));
+  let html=`<div class="verdict ${needTwo?'two':'one'}"><h3>${needTwo?'Two trucks':'One truck'}</h3>
+    <p>${needTwo?'This day overflows — allocate a second truck or move a job.':'Fits one truck within the 8-hour window.'}</p></div>
+    <div class="card" style="padding:12px 14px">
+    <div class="stat"><span>Jobs</span><span class="v">${dayJobs.length}</span></div>
+    <div class="stat"><span>Finish ~ </span><span class="v">${hhmm(DAY_START_MIN+total)}</span></div>
+    <div class="stat"><span>Service</span><span class="v">${fmt(service)}</span></div>
+    <div class="stat"><span>Driving (live)</span><span class="v">${fmt(totalDrive)}</span></div>
+    <div class="stat"><span>Total</span><span class="v">${fmt(total)}</span></div>
+    <div class="stat"><span>Window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
+    <div class="bar ${overflow?'over':''}"><i style="width:${pct}%"></i></div></div>`;
+  if(reasons.length)html+=`<div class="card" style="padding:12px 14px"><label style="margin-bottom:6px">Why</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
+  res.innerHTML=html;
+
+  // stops (use live legs for drive minutes; legs[0]=CW->TW, legs[1]=TW->stop0, ...)
+  const sd=document.getElementById('stops');
+  let s=`<div class="stop depot"><div class="num">▶</div><div class="lbl"><b>${CW.label}</b><span>05:00 start</span></div></div>
+    <div class="stop depot"><div class="num">TW</div><div class="lbl"><b>${TW.label}</b><span>cage drop ~07:00</span></div>
+    <div class="drive">${legs&&legs[0]?Math.round(legs[0].duration.value/60)+'m':''}</div></div>`;
+  (seq||[]).forEach((st,i)=>{
+    const leg=legs&&legs[i+1];
+    s+=`<div class="stop ${st.type}"><div class="num">${i+1}</div>
+      <div class="lbl"><b>Job ${dayJobs.findIndex(j=>j.id===st.job.id)+1} ${st.type==='pick'?'pickup':'delivery'}${st.timed?' ⏱':''}</b><span>${st.addr}</span></div>
+      <div class="drive">${leg?Math.round(leg.duration.value/60)+'m':''}</div><div class="eta">${hhmm(st.eta)}</div></div>`;
+  });
+  s+=`<div class="stop depot"><div class="num">■</div><div class="lbl"><b>${CW.label}</b><span>return</span></div>
+    <div class="drive">${legs&&legs.length?Math.round(legs[legs.length-1].duration.value/60)+'m':''}</div></div>`;
+  sd.innerHTML=s;
+}
+
+/* ---------- clear ---------- */
+document.getElementById('clear-all').onclick=async ()=>{
+  if(!confirm('Delete ALL saved jobs?'))return;
+  jobs=[];await saveJobs();renderCal();
+  document.getElementById('result').innerHTML='<div class="empty">Pick a day, then Plan day.</div>';
+  document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';
+};
+
+/* ---------- init ---------- */
+(async function(){
+  document.getElementById('f-date').value=ymd(new Date());
+  await loadJobs();
+  renderCal();
+})();
 </script>
 </body>
 </html>
