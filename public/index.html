@@ -316,20 +316,44 @@ function machKg(m){const s=CATALOG[m.model];return s?s.kg*m.qty:0;}
 function jobArea(j){return j.machines.reduce((s,m)=>s+machArea(m),0);}
 function jobKg(j){return j.machines.reduce((s,m)=>s+machKg(m),0);}
 function jobMachCount(j){return j.machines.reduce((s,m)=>s+(m.qty||1),0);}
-// Service time for ONE stop (pickup or delivery) of a job.
-// Normal stop = 30 min. Quick stop = 30 + (machines-1)*10 (tailgate/pallet-jack setup once).
 const QUICK_BASE=30, QUICK_EXTRA=10;
-function stopService(j, type){
-  const quick = type==='pick' ? j.pickQuick : j.dropQuick;
-  const base = type==='pick' ? PICK_MIN : DROP_MIN;
-  if(!quick) return base;
-  const n=Math.max(1, jobMachCount(j));
-  return QUICK_BASE + (n-1)*QUICK_EXTRA;
+function isQuick(j,type){ return type==='pick'?!!j.pickQuick:!!j.dropQuick; }
+// Base per-stop service WITHOUT same-address grouping (used as a fallback / non-quick).
+function stopServiceBase(j,type){ return type==='pick'?PICK_MIN:DROP_MIN; }
+// Compute service time for every stop in an ORDERED list, applying the rule:
+//  - non-quick stop = 30 min
+//  - quick stops sharing the same address: first = 30, each additional = +10
+// Returns a Map keyed by the stop object -> minutes.
+function computeServiceTimes(orderedStops){
+  const m=new Map();
+  const quickSeen={}; // address -> how many quick stops counted so far
+  orderedStops.forEach(s=>{
+    if(isQuick(s.job, s.type)){
+      const key=(s.addr||'').toLowerCase();
+      const seen=quickSeen[key]||0;
+      m.set(s, seen===0 ? QUICK_BASE : QUICK_EXTRA);
+      quickSeen[key]=seen+1;
+    } else {
+      m.set(s, stopServiceBase(s.job, s.type));
+    }
+  });
+  return m;
 }
+// jobService is a rough per-job estimate (used by booking/day-fit before ordering is known);
+// it treats quick stops as base 30 unless we have route context.
 function jobService(j){
-  return (j.npick?stopService(j,'pick'):0) + (j.ndrop?stopService(j,'drop'):0);
+  return (j.npick?stopServiceBase(j,'pick'):0) + (j.ndrop?stopServiceBase(j,'drop'):0);
 }
 function jobLabel(j){ const i=jobs.findIndex(x=>x.id===j.id)+1; return j.ref?j.ref:('Job '+(i>0?i:'?')); }
+// Sequential service-time: pass a per-run object {} that tracks quick stops seen per address.
+function stopServiceSeq(s, quickSeen){
+  if(isQuick(s.job, s.type)){
+    const key=(s.addr||'').toLowerCase();
+    const seen=quickSeen[key]||0; quickSeen[key]=seen+1;
+    return seen===0 ? QUICK_BASE : QUICK_EXTRA;
+  }
+  return stopServiceBase(s.job, s.type);
+}
 function cageArea(n){return n*(CAGE.w/1000)*(CAGE.d/1000);}
 function fmt(min){min=Math.round(min);const h=Math.floor(min/60),m=min%60;return(h?h+'h ':'')+(m?m+'m':(h?'':'0m'));}
 function hhmm(min){min=Math.round(min);let h=Math.floor(min/60),m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
@@ -397,6 +421,7 @@ function sequence(dayJobs, startCages){
   let timedMiss=false, longWait=false;
   let clock=DAY_START_MIN;
   let cageFloor=cageArea(startCages||0);
+  const quickSeen={};   // per-address counter for quick-stop service grouping
   let usedArea=0, usedKg=0;
 
   picks.filter(p=>!p.done && p.depot==='CW').forEach(p=>{
@@ -483,7 +508,7 @@ function sequence(dayJobs, startCages){
     if(winClose!=null && arrival>winClose){ missed=true; timedMiss=true;
       const why=(node.timed&&node.tto===winClose)?'timed slot':'site closes';
       warnings.push(`Window missed (${why}): arrive ${hhmm(arrival)}, closes ${hhmm(winClose)} at ${node.addr}.`); }
-    const service=stopService(node.job, type);
+    const service=stopServiceSeq(node, quickSeen);
     if(type==='pick'){usedArea+=jobArea(node.job);usedKg+=jobKg(node.job);onboard.push(node.job.id);}
     else{const i=onboard.indexOf(node.job.id);if(i>=0)onboard.splice(i,1);usedArea-=jobArea(node.job);usedKg-=jobKg(node.job);if(usedArea<0)usedArea=0;if(usedKg<0)usedKg=0;cageFloor=0;}
     clock+=service;                    // clock now = departure time (ETD)
@@ -516,7 +541,7 @@ function twoOptImprove(routeStops, startCages){
   };
   // simulate the timeline along an order; return true if no timed/access window is missed
   const windowsOK=(arr)=>{
-    let clock=DAY_START_MIN, prev={lat:TW.lat,lng:TW.lng};
+    let clock=DAY_START_MIN, prev={lat:TW.lat,lng:TW.lng}; const quickSeen={};
     for(const s of arr){
       clock+=travelMin(prev,s);
       let winOpen=null,winClose=null;
@@ -525,9 +550,9 @@ function twoOptImprove(routeStops, startCages){
       const ac=timeToMin(s.close||(hoursFor(s.addr)&&hoursFor(s.addr).close));
       if(ao!=null)winOpen=(winOpen==null)?ao:Math.max(winOpen,ao);
       if(ac!=null)winClose=(winClose==null)?ac:Math.min(winClose,ac);
-      if(winOpen!=null&&clock<winOpen)clock=winOpen;       // wait
-      if(winClose!=null&&clock>winClose)return false;       // missed
-      clock+=stopService(s.job, s.type);
+      if(winOpen!=null&&clock<winOpen)clock=winOpen;
+      if(winClose!=null&&clock>winClose)return false;
+      clock+=stopServiceSeq(s, quickSeen);
       prev=s;
     }
     return true;
@@ -537,17 +562,33 @@ function twoOptImprove(routeStops, startCages){
   // Ensure we start from a feasible order if possible; if the incoming order isn't window-feasible,
   // 2-opt will still search for one that is.
   let best=routeStops.slice(), bestCost=cost(best), bestFeas=feasible(best), improved=true, guard=0;
-  while(improved && guard++<80){
+  const tryCand=(cand)=>{
+    if(!precOK(cand))return false;
+    const candFeas=windowsOK(cand);
+    const c=cost(cand);
+    if((candFeas&&!bestFeas) || (candFeas===bestFeas && c<bestCost-0.01)){
+      best=cand; bestCost=c; bestFeas=candFeas; return true;
+    }
+    return false;
+  };
+  while(improved && guard++<120){
     improved=false;
+    // 2-opt: reverse a segment
     for(let i=0;i<best.length-1;i++){
       for(let k=i+1;k<best.length;k++){
         const cand=best.slice(0,i).concat(best.slice(i,k+1).reverse(), best.slice(k+1));
-        if(!precOK(cand))continue;
-        const candFeas=windowsOK(cand);
-        const c=cost(cand);
-        // Prefer feasible over infeasible; among same feasibility, prefer lower cost.
-        if((candFeas&&!bestFeas) || (candFeas===bestFeas && c<bestCost-0.01)){
-          best=cand; bestCost=c; bestFeas=candFeas; improved=true;
+        if(tryCand(cand)){improved=true;}
+      }
+    }
+    // or-opt: relocate a run of 1, 2 or 3 consecutive stops to another position
+    for(let segLen=1; segLen<=3; segLen++){
+      for(let i=0;i+segLen<=best.length;i++){
+        const seg=best.slice(i,i+segLen);
+        const rest=best.slice(0,i).concat(best.slice(i+segLen));
+        for(let j=0;j<=rest.length;j++){
+          if(j===i && segLen===1)continue; // same spot
+          const cand=rest.slice(0,j).concat(seg, rest.slice(j));
+          if(tryCand(cand)){improved=true;}
         }
       }
     }
@@ -1009,16 +1050,20 @@ function recomputeTimes(displaySeq){
   const twArrival=DEPART_CW+cwtwMin;
   let clock=Math.max(twArrival, DAY_START_MIN);
   const startClock=clock;
-  let timedMiss=false, longWait=false;
+  let timedMiss=false, longWait=false; const quickSeen={};
   const stopsTimed=displaySeq.map((s,i)=>{
     const driveMin=legMin(lastLegs[i+1]);
     let eta=clock+driveMin, waitMin=0, missed=false;
-    if(s.type==='drop' && s.timed){
-      const tf=timeToMin(s.job.tfrom), tt=timeToMin(s.job.tto);
-      if(tf!=null && eta<tf){ waitMin=tf-eta; eta=tf; if(waitMin>=LONG_WAIT_MIN)longWait=true; }
-      if(tt!=null && eta>tt){ missed=true; timedMiss=true; }
-    }
-    const service=stopService(s.job, s.type);
+    // effective window = timed slot (deliveries) overlapped with site access hours (both types)
+    let winOpen=null, winClose=null;
+    if(s.type==='drop' && s.timed){ winOpen=timeToMin(s.job.tfrom); winClose=timeToMin(s.job.tto); }
+    const ao=timeToMin(s.open||(hoursFor(s.addr)&&hoursFor(s.addr).open));
+    const ac=timeToMin(s.close||(hoursFor(s.addr)&&hoursFor(s.addr).close));
+    if(ao!=null)winOpen=(winOpen==null)?ao:Math.max(winOpen,ao);
+    if(ac!=null)winClose=(winClose==null)?ac:Math.min(winClose,ac);
+    if(winOpen!=null && eta<winOpen){ waitMin=winOpen-eta; eta=winOpen; if(waitMin>=LONG_WAIT_MIN)longWait=true; }
+    if(winClose!=null && eta>winClose){ missed=true; timedMiss=true; }
+    const service=stopServiceSeq(s, quickSeen);
     const etd=eta+service;
     clock=etd;
     return {...s, driveMin, eta, service, etd, waitMin, missed};
