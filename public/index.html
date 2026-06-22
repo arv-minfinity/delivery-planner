@@ -91,6 +91,8 @@
   .stop .mv button{padding:0 6px;font-size:10px;line-height:1.4;border-radius:4px}
   .times{font-size:10px;color:var(--muted);flex-shrink:0;text-align:right;line-height:1.4}
   .stop.miss{border-color:var(--red);background:var(--red-bg)}
+  .opt{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:8px;cursor:pointer}
+  .opt:hover{border-color:var(--amber)} .opt b{font-size:14px}
   .times .eta{color:var(--blue)} .times .etd{color:var(--amber)} .times .clk{color:var(--faint)}
 </style>
 </head>
@@ -109,9 +111,11 @@
       <div class="row"><div><label>Pickup address</label>
         <select id="f-pick-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
         <input id="f-pick" placeholder="Start typing…" autocomplete="off"/></div></div>
+      <div class="row r2"><div><label>Pickup access from</label><input id="f-pick-open" type="time"/></div><div><label>to</label><input id="f-pick-close" type="time"/></div></div>
       <div class="row"><div><label>Delivery address</label>
         <select id="f-drop-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
         <input id="f-drop" placeholder="Start typing…" autocomplete="off"/></div></div>
+      <div class="row r2"><div><label>Delivery access from</label><input id="f-drop-open" type="time"/></div><div><label>to</label><input id="f-drop-close" type="time"/></div></div>
       <div class="row r2">
         <div><label>Pickups</label><input id="f-npick" type="number" min="0" value="1"/></div>
         <div><label>Deliveries</label><input id="f-ndrop" type="number" min="0" value="1"/></div>
@@ -163,6 +167,14 @@
   </div>
 </div>
 
+<!-- booking options modal -->
+<div id="booking-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center">
+  <div class="card" style="width:420px;max-width:92vw;margin:0">
+    <h2 class="section">Choose a booking option</h2>
+    <div id="booking-body"></div>
+  </div>
+</div>
+
 <!-- edit-job modal -->
 <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center">
   <div class="card" style="width:380px;max-width:92vw;max-height:88vh;overflow:auto;margin:0">
@@ -170,9 +182,11 @@
     <div class="row"><div><label>Pickup address</label>
       <select id="e-pick-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
       <input id="e-pick" autocomplete="off"/></div></div>
+    <div class="row r2"><div><label>Pickup access from</label><input id="e-pick-open" type="time"/></div><div><label>to</label><input id="e-pick-close" type="time"/></div></div>
     <div class="row"><div><label>Delivery address</label>
       <select id="e-drop-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
       <input id="e-drop" autocomplete="off"/></div></div>
+    <div class="row r2"><div><label>Delivery access from</label><input id="e-drop-open" type="time"/></div><div><label>to</label><input id="e-drop-close" type="time"/></div></div>
     <div class="row r2"><div><label>Pickups</label><input id="e-npick" type="number" min="0"/></div><div><label>Deliveries</label><input id="e-ndrop" type="number" min="0"/></div></div>
     <label>Machines</label><div id="e-mach-rows"></div>
     <button class="btn-ghost" id="e-add-mach" style="margin:0 0 9px;font-size:13px">+ add machine</button>
@@ -198,7 +212,8 @@ const DAY_START_MIN=7*60;                    // deliveries begin ~07:00 after th
 const CW={label:"Cranbourne West (CW)",addr:"7 Trade Way, Cranbourne West VIC 3977",lat:-38.0846,lng:145.2581};
 const TW={label:"Tullamarine warehouse (TW)",addr:"108 Sharps Road, Tullamarine VIC 3043",lat:-37.6975,lng:144.8569};
 
-let jobs=[];           // persisted: {id, pick, drop, npick, ndrop, machines, timed, tfrom, tto, date(YYYY-MM-DD)}
+let jobs=[];           // persisted jobs
+let addrBook={};       // persisted: { "address string": {open:"HH:MM", close:"HH:MM"} }
 let mapsReady=false, map, directionsService, directionsRenderer, geocoder;
 let weekStart=mondayOf(new Date());
 let selectedDate=null;
@@ -209,10 +224,15 @@ let manualOrder=null;   // when set, a user-locked route order (array of stop ke
 async function loadJobs(){
   try{ const raw=localStorage.getItem('arv_jobs'); jobs = raw ? JSON.parse(raw) : []; }
   catch(e){ jobs=[]; }
+  try{ const ab=localStorage.getItem('arv_addrbook'); addrBook = ab ? JSON.parse(ab) : {}; }
+  catch(e){ addrBook={}; }
 }
 async function saveJobs(){
   try{ localStorage.setItem('arv_jobs', JSON.stringify(jobs)); }catch(e){ console.warn('save failed',e); }
 }
+function saveAddrBook(){ try{ localStorage.setItem('arv_addrbook', JSON.stringify(addrBook)); }catch(e){} }
+function rememberHours(addr,open,close){ if(addr&&(open||close)){ addrBook[addr]={open:open||'',close:close||''}; saveAddrBook(); } }
+function hoursFor(addr){ return addrBook[addr]||null; }
 
 /* ---------- keys + maps ---------- */
 fetch('/api/health').then(r=>r.json()).then(d=>{
@@ -252,7 +272,12 @@ window.initMaps=function(){
 };
 function attachAC(input,which){
   const ac=new google.maps.places.Autocomplete(input,{fields:['formatted_address','geometry'],componentRestrictions:{country:'au'}});
-  ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p.geometry)picked[which]={addr:p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng(),depot:null};});
+  ac.addListener('place_changed',()=>{const p=ac.getPlace();if(p.geometry){picked[which]={addr:p.formatted_address,lat:p.geometry.location.lat(),lng:p.geometry.location.lng(),depot:null};
+    const h=hoursFor(p.formatted_address);
+    if(h){const op=which==='pick'?'f-pick-open':'f-drop-open',cl=which==='pick'?'f-pick-close':'f-drop-close';
+      if(!document.getElementById(op).value)document.getElementById(op).value=h.open||'';
+      if(!document.getElementById(cl).value)document.getElementById(cl).value=h.close||'';}
+  }});
 }
 
 // depot selectors: choosing CW/TW fills the address and tags it as a depot stop
@@ -320,8 +345,12 @@ function haversineMin(a,b){
 const LONG_WAIT_MIN = 45;   // waiting longer than this at a timed stop is flagged
 
 function sequence(dayJobs, startCages){
-  const picks = dayJobs.filter(j=>j.pick).map(j=>({job:j,type:'pick',...j.pick,done:false}));
-  const drops = dayJobs.filter(j=>j.drop).map(j=>({job:j,type:'drop',...j.drop,done:false,timed:j.timed,tfrom:timeToMin(j.tfrom),tto:timeToMin(j.tto)}));
+  const picks = dayJobs.filter(j=>j.pick).map(j=>({job:j,type:'pick',...j.pick,done:false,
+    aopen:timeToMin(j.pick.open||(hoursFor(j.pick.addr)&&hoursFor(j.pick.addr).open)),
+    aclose:timeToMin(j.pick.close||(hoursFor(j.pick.addr)&&hoursFor(j.pick.addr).close))}));
+  const drops = dayJobs.filter(j=>j.drop).map(j=>({job:j,type:'drop',...j.drop,done:false,timed:j.timed,tfrom:timeToMin(j.tfrom),tto:timeToMin(j.tto),
+    aopen:timeToMin(j.drop.open||(hoursFor(j.drop.addr)&&hoursFor(j.drop.addr).open)),
+    aclose:timeToMin(j.drop.close||(hoursFor(j.drop.addr)&&hoursFor(j.drop.addr).close))}));
   const onboard=[];
   const seq=[];
   const warnings=[];
@@ -390,10 +419,16 @@ function sequence(dayJobs, startCages){
     const mins=haversineMin(cur,node);
     clock+=mins;                       // clock = arrival time at node
     let arrival=clock, waitMin=0, missed=false;
-    if(type==='drop' && node.timed){
-      if(node.tfrom!=null && arrival<node.tfrom){ waitMin=node.tfrom-arrival; clock=node.tfrom; arrival=node.tfrom; if(waitMin>=LONG_WAIT_MIN){longWait=true;warnings.push(`Long wait ${fmt(waitMin)} before ${hhmm(node.tfrom)} slot at ${node.addr}.`);} }
-      if(node.tto!=null && arrival>node.tto){ missed=true; timedMiss=true; warnings.push(`Timed slot missed: arrive ${hhmm(arrival)}, window closes ${hhmm(node.tto)} at ${node.addr}.`); }
-    }
+    // Effective window = overlap of timed slot (deliveries) and site access hours (both stop types)
+    let winOpen=null, winClose=null;
+    if(type==='drop' && node.timed){ winOpen=node.tfrom; winClose=node.tto; }
+    if(node.aopen!=null) winOpen = (winOpen==null)?node.aopen:Math.max(winOpen,node.aopen);
+    if(node.aclose!=null) winClose = (winClose==null)?node.aclose:Math.min(winClose,node.aclose);
+    if(winOpen!=null && arrival<winOpen){ waitMin=winOpen-arrival; clock=winOpen; arrival=winOpen;
+      if(waitMin>=LONG_WAIT_MIN){longWait=true;warnings.push(`Long wait ${fmt(waitMin)} before ${hhmm(winOpen)} at ${node.addr}.`);} }
+    if(winClose!=null && arrival>winClose){ missed=true; timedMiss=true;
+      const why=(node.timed&&node.tto===winClose)?'timed slot':'site closes';
+      warnings.push(`Window missed (${why}): arrive ${hhmm(arrival)}, closes ${hhmm(winClose)} at ${node.addr}.`); }
     const service=(type==='pick'?PICK_MIN:DROP_MIN);
     if(type==='pick'){usedArea+=jobArea(node.job);usedKg+=jobKg(node.job);onboard.push(node.job.id);}
     else{const i=onboard.indexOf(node.job.id);if(i>=0)onboard.splice(i,1);usedArea-=jobArea(node.job);usedKg-=jobKg(node.job);if(usedArea<0)usedArea=0;if(usedKg<0)usedKg=0;cageFloor=0;}
@@ -439,21 +474,28 @@ function readLeg(){
   const ndrop=+document.getElementById('f-ndrop').value||0;
   const pickAddr=document.getElementById('f-pick').value.trim();
   const dropAddr=document.getElementById('f-drop').value.trim();
+  const pOpen=document.getElementById('f-pick-open').value, pClose=document.getElementById('f-pick-close').value;
+  const dOpen=document.getElementById('f-drop-open').value, dClose=document.getElementById('f-drop-close').value;
   const machines=[...machRows.querySelectorAll('.mach-row')].map(r=>({model:r.querySelector('.m-model').value,qty:+r.querySelector('.m-qty').value||1}));
   const timed=document.getElementById('f-timed').checked;
   const tfrom=document.getElementById('f-tfrom').value, tto=document.getElementById('f-tto').value;
   if(!pickAddr&&!dropAddr)return null;
   if(npick===0&&ndrop===0)return null;
-  return {
-    pick: pickAddr?(picked.pick&&picked.pick.addr===pickAddr?picked.pick:{addr:pickAddr,lat:null,lng:null,depot:null}):null,
-    drop: dropAddr?(picked.drop&&picked.drop.addr===dropAddr?picked.drop:{addr:dropAddr,lat:null,lng:null,depot:null}):null,
-    npick,ndrop,machines,timed,tfrom,tto
-  };
+  // remember access hours per address
+  if(pickAddr)rememberHours(pickAddr,pOpen,pClose);
+  if(dropAddr)rememberHours(dropAddr,dOpen,dClose);
+  const pick = pickAddr?(picked.pick&&picked.pick.addr===pickAddr?{...picked.pick}:{addr:pickAddr,lat:null,lng:null,depot:null}):null;
+  const drop = dropAddr?(picked.drop&&picked.drop.addr===dropAddr?{...picked.drop}:{addr:dropAddr,lat:null,lng:null,depot:null}):null;
+  if(pick){pick.open=pOpen||'';pick.close=pClose||'';}
+  if(drop){drop.open=dOpen||'';drop.close=dClose||'';}
+  return {pick,drop,npick,ndrop,machines,timed,tfrom,tto};
 }
 function clearLegForm(){
   picked={pick:null,drop:null};
   document.getElementById('f-pick').value='';document.getElementById('f-drop').value='';
   document.getElementById('f-pick-depot').value='';document.getElementById('f-drop-depot').value='';
+  document.getElementById('f-pick-open').value='';document.getElementById('f-pick-close').value='';
+  document.getElementById('f-drop-open').value='';document.getElementById('f-drop-close').value='';
   document.getElementById('f-npick').value=1;document.getElementById('f-ndrop').value=1;
   document.getElementById('f-timed').checked=false;document.getElementById('timed-fields').style.display='none';
   machRows.innerHTML='';machRows.appendChild(machRowHTML());
@@ -471,6 +513,8 @@ document.getElementById('add-leg').onclick=()=>{
   stagedLegs.push(leg); clearLegForm(); renderStaged();
 };
 
+let pendingBooking=null;  // {candidate, options}
+
 document.getElementById('add-job').onclick=async ()=>{
   const reqDate=document.getElementById('f-date').value||ymd(new Date());
   const legs=[...stagedLegs];
@@ -478,27 +522,115 @@ document.getElementById('add-job').onclick=async ()=>{
   if(cur)legs.push(cur);
   if(!legs.length){alert('Enter at least one pickup/delivery.');return;}
 
-  // Build candidate job records (one per leg), share a bookingId, and find a date that fits them together.
   const bookingId='b'+Date.now();
   const candidate=legs.map((l,i)=>({id:'j'+Date.now()+i+Math.floor(Math.random()*999), bookingId, ...l, date:null}));
-  const assigned=findDateMulti(reqDate, candidate);
-  candidate.forEach(j=>j.date=assigned);
-  jobs.push(...candidate); await saveJobs();
 
-  stagedLegs=[]; renderStaged(); clearLegForm();
+  // geocode candidate addresses (so clustering scoring has coordinates) — best effort
+  await geocodeJobs(candidate);
 
-  // warn if the assigned day has a timed-miss even after placement
-  const dayCheck=dayFits(jobsOn(assigned));
-  const note=document.getElementById('booknote');
-  let msg = (assigned!==reqDate)
-    ? `Requested ${fmtDate(new Date(reqDate+'T00:00:00'))} couldn't fit — booked to ${fmtDate(new Date(assigned+'T00:00:00'))}.`
-    : `Booked for ${fmtDate(new Date(assigned+'T00:00:00'))}.`;
-  if(dayCheck.timedMiss) msg += ' ⚠ A timed slot may not be met — review and adjust.';
-  note.textContent=msg; note.style.display='block';
-  weekStart=mondayOf(new Date(assigned+'T00:00:00'));
-  selectedDate=assigned;
-  renderCal(); selectDay(assigned);
+  const options=scoreBookingOptions(reqDate, candidate);
+  pendingBooking={candidate, options};
+  showBookingOptions(options);
 };
+
+// rough centroid of a job's stops
+function jobCenter(j){
+  const pts=[]; if(j.pick&&j.pick.lat!=null)pts.push(j.pick); if(j.drop&&j.drop.lat!=null)pts.push(j.drop);
+  if(!pts.length)return null;
+  return {lat:pts.reduce((s,p)=>s+p.lat,0)/pts.length, lng:pts.reduce((s,p)=>s+p.lng,0)/pts.length};
+}
+function kmBetween(a,b){if(!a||!b)return 999;const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
+
+// score the requested date + next working days within a 3-day horizon
+function scoreBookingOptions(reqDate, candidate){
+  const cages=+document.getElementById('f-cages').value||0;
+  const candCenter=candidate.map(jobCenter).filter(Boolean);
+  const candC = candCenter.length?{lat:candCenter.reduce((s,p)=>s+p.lat,0)/candCenter.length,lng:candCenter.reduce((s,p)=>s+p.lng,0)/candCenter.length}:null;
+
+  const opts=[];
+  let d=new Date(reqDate+'T00:00:00'); if(isNaN(d))d=new Date();
+  let checked=0, horizon=0;
+  while(horizon<10 && checked<4){           // scan up to ~2 weeks, collect ~4 working-day candidates
+    if(isWeekday(d)){
+      const ds=ymd(d);
+      const existing=jobsOn(ds);
+      const trial=[...existing, ...candidate];
+      const fit=dayFits(trial);
+      // clustering: average distance from candidate centre to existing jobs that day (smaller = better fit)
+      let cluster=null;
+      if(candC && existing.length){
+        const dists=existing.map(j=>kmBetween(candC, jobCenter(j))).filter(x=>x<900);
+        if(dists.length)cluster=dists.reduce((a,b)=>a+b,0)/dists.length;
+      }
+      const within3=checked<3;             // first 3 working days from requested = the 3-day horizon
+      opts.push({date:ds, fits:fit.fits, totalMin:fit.totalMin, timedMiss:fit.timedMiss,
+        cluster, existing:existing.length, within3});
+      checked++;
+    }
+    d=addDays(d,1); horizon++;
+  }
+
+  // Rank: prefer fits within 3 days, then best clustering (low km), then soonest.
+  const ranked=opts.slice().sort((a,b)=>{
+    if(a.fits!==b.fits)return a.fits?-1:1;
+    if(a.within3!==b.within3)return a.within3?-1:1;
+    const ca=a.cluster==null?500:a.cluster, cb=b.cluster==null?500:b.cluster;
+    if(Math.abs(ca-cb)>3)return ca-cb;
+    return new Date(a.date)-new Date(b.date);
+  });
+
+  // Build up to 3 presented options + a second-truck option if nothing in 3 days fits on one truck.
+  const top=ranked.slice(0,3);
+  const anyFitIn3 = ranked.some(o=>o.fits&&o.within3);
+  const result=top.map(o=>({
+    kind:'day', date:o.date, fits:o.fits, totalMin:o.totalMin, cluster:o.cluster, existing:o.existing,
+    label:`${fmtDate(new Date(o.date+'T00:00:00'))}`,
+    detail:`${o.existing} existing job(s) · day ~${fmt(o.totalMin)}${o.cluster!=null?` · ~${Math.round(o.cluster)}km from that day's work`:''}${o.fits?'':' · ⚠ does not fit one truck'}${o.timedMiss?' · ⚠ timed slot risk':''}`
+  }));
+  if(!anyFitIn3){
+    // second-truck suggestion on the requested (or soonest working) day
+    let sd=new Date(reqDate+'T00:00:00'); if(isNaN(sd))sd=new Date(); while(!isWeekday(sd))sd=addDays(sd,1);
+    result.unshift({kind:'second', date:ymd(sd),
+      label:`${fmtDate(sd)} — run 2nd truck`,
+      detail:`No one-truck fit within 3 days. Book on the requested day using a second truck.`});
+  }
+  return result;
+}
+
+async function commitBooking(date, kind){
+  const {candidate}=pendingBooking;
+  candidate.forEach(j=>{ j.date=date; if(kind==='second')j.truck=2; });
+  jobs.push(...candidate); await saveJobs();
+  pendingBooking=null;
+  document.getElementById('booking-modal').style.display='none';
+  stagedLegs=[]; renderStaged(); clearLegForm();
+  weekStart=mondayOf(new Date(date+'T00:00:00')); selectedDate=date;
+  renderCal(); selectDay(date);
+  const note=document.getElementById('booknote');
+  note.textContent=`Booked for ${fmtDate(new Date(date+'T00:00:00'))}${kind==='second'?' (second truck)':''}.`;
+  note.style.display='block';
+}
+
+function showBookingOptions(options){
+  const m=document.getElementById('booking-modal'), body=document.getElementById('booking-body');
+  body.innerHTML=options.map((o,i)=>`<div class="opt" onclick="pickOption(${i})">
+    <b>${o.label}</b><div class="small">${o.detail}</div></div>`).join('')
+    +`<button class="btn-ghost" style="width:100%;margin-top:8px" onclick="document.getElementById('booking-modal').style.display='none'">Cancel</button>`;
+  m.style.display='flex';
+}
+window.pickOption=(i)=>{const o=pendingBooking.options[i];commitBooking(o.date,o.kind);};
+
+// geocode any jobs missing coords (used before scoring)
+function geocodeJobs(list){
+  if(!mapsReady)return Promise.resolve();
+  const todo=[];
+  list.forEach(j=>{ if(j.pick&&j.pick.lat==null&&j.pick.addr)todo.push(j.pick); if(j.drop&&j.drop.lat==null&&j.drop.addr)todo.push(j.drop); });
+  return Promise.all(todo.map(pt=>new Promise(res=>{
+    geocoder.geocode({address:pt.addr,componentRestrictions:{country:'AU'}},(r,st)=>{
+      if(st==='OK'&&r[0]){pt.lat=r[0].geometry.location.lat();pt.lng=r[0].geometry.location.lng();}res();
+    });
+  })));
+}
 
 // find a weekday that fits all candidate legs together; falls back to requested date if none within 60 days
 function findDateMulti(requested, candidateJobs){
@@ -555,11 +687,13 @@ function renderDayJobs(){
   el.innerHTML=list.map(j=>{
     const idx=jobs.findIndex(x=>x.id===j.id)+1;
     const mach=j.machines.map(m=>`${m.qty}× ${m.model}`).join(', ')||'—';
-    const route=[j.pick&&('P: '+j.pick.addr),j.drop&&('D: '+j.drop.addr)].filter(Boolean).join('<br>');
+    const ph=j.pick&&(j.pick.open||j.pick.close)?` [${j.pick.open||'…'}–${j.pick.close||'…'}]`:'';
+    const dh=j.drop&&(j.drop.open||j.drop.close)?` [${j.drop.open||'…'}–${j.drop.close||'…'}]`:'';
+    const route=[j.pick&&('P: '+j.pick.addr+ph),j.drop&&('D: '+j.drop.addr+dh)].filter(Boolean).join('<br>');
     return `<div class="dj">
-      <div class="h"><b>Job ${idx}${j.timed?' ⏱':''}</b>
+      <div class="h"><b>Job ${idx}${j.timed?' ⏱':''}${j.truck===2?' · 🚚2':''}</b>
         <div class="acts"><button onclick="editJob('${j.id}')">Edit</button><button onclick="moveJobDate('${j.id}')">Date</button><button class="btn-x" onclick="deleteJob('${j.id}')">✕</button></div></div>
-      <div class="meta">${route}<br>${mach} · ${Math.round(jobKg(j))} kg${j.timed?` · window ${j.tfrom}–${j.tto}`:''}</div>
+      <div class="meta">${route}<br>${mach} · ${Math.round(jobKg(j))} kg${j.timed?` · slot ${j.tfrom}–${j.tto}`:''}</div>
     </div>`;
   }).join('');
 }
@@ -610,6 +744,10 @@ window.editJob=(id)=>{
   document.getElementById('e-tfrom').value=j.tfrom||'09:00';
   document.getElementById('e-tto').value=j.tto||'11:00';
   document.getElementById('e-date').value=j.date;
+  document.getElementById('e-pick-open').value=j.pick&&j.pick.open?j.pick.open:'';
+  document.getElementById('e-pick-close').value=j.pick&&j.pick.close?j.pick.close:'';
+  document.getElementById('e-drop-open').value=j.drop&&j.drop.open?j.drop.open:'';
+  document.getElementById('e-drop-close').value=j.drop&&j.drop.close?j.drop.close:'';
   eMach.innerHTML=''; (j.machines.length?j.machines:[{model:'M2000',qty:1}]).forEach(m=>eMach.appendChild(eMachRow(m.model,m.qty)));
   // attach autocomplete + depot selectors for edit fields (once maps ready)
   if(mapsReady){
@@ -643,6 +781,8 @@ document.getElementById('edit-save').onclick=async ()=>{
   j.tfrom=document.getElementById('e-tfrom').value; j.tto=document.getElementById('e-tto').value;
   j.pick=pickAddr?(ePicked.pick&&ePicked.pick.addr===pickAddr?ePicked.pick:{addr:pickAddr,lat:null,lng:null,depot:null}):null;
   j.drop=dropAddr?(ePicked.drop&&ePicked.drop.addr===dropAddr?ePicked.drop:{addr:dropAddr,lat:null,lng:null,depot:null}):null;
+  if(j.pick){j.pick.open=document.getElementById('e-pick-open').value||'';j.pick.close=document.getElementById('e-pick-close').value||'';rememberHours(j.pick.addr,j.pick.open,j.pick.close);}
+  if(j.drop){j.drop.open=document.getElementById('e-drop-open').value||'';j.drop.close=document.getElementById('e-drop-close').value||'';rememberHours(j.drop.addr,j.drop.open,j.drop.close);}
   const newDate=document.getElementById('e-date').value;
   if(newDate&&newDate!==j.date)j.date=newDate;
   await saveJobs();
@@ -939,8 +1079,9 @@ function makeRunSheet(stopsTimed, startClock, finishClock, cwtwMin, backMin){
     const jobN=jobs.findIndex(j=>j.id===st.job.id)+1;
     const mach=st.job.machines.map(m=>`${m.qty}× ${m.model}`).join(', ');
     const slot=st.timed?`<br><b style="color:#b45309">SLOT ${st.job.tfrom}–${st.job.tto}</b>`:'';
+    const ah=(st.open||st.close)?`<br><span style="color:#555">access ${st.open||'…'}–${st.close||'…'}</span>`:'';
     const wait=st.waitMin?`<br>wait ${fmt(st.waitMin)}`:'';
-    rows+=`<tr${st.missed?' class="miss"':''}><td>${n}</td><td>Job ${jobN}</td><td>${st.type==='pick'?'PICK':'DELIVER'}${slot}</td><td>${st.addr}</td><td>${mach}</td><td>ETA ${hhmm(st.eta)}<br>ETD ${hhmm(st.etd)}${wait}</td></tr>`;
+    rows+=`<tr${st.missed?' class="miss"':''}><td>${n}</td><td>Job ${jobN}</td><td>${st.type==='pick'?'PICK':'DELIVER'}${slot}</td><td>${st.addr}${ah}</td><td>${mach}</td><td>ETA ${hhmm(st.eta)}<br>ETD ${hhmm(st.etd)}${wait}</td></tr>`;
   });
   rows+=`<tr class="depot"><td>—</td><td><b>Return to CW</b></td><td>END</td><td>${CW.addr}</td><td>—</td><td>~${hhmm(finishClock)}</td></tr>`;
 
