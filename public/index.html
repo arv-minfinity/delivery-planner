@@ -112,10 +112,12 @@
         <select id="f-pick-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
         <input id="f-pick" placeholder="Start typing…" autocomplete="off"/></div></div>
       <div class="row r2"><div><label>Pickup access from</label><input id="f-pick-open" type="time"/></div><div><label>to</label><input id="f-pick-close" type="time"/></div></div>
+      <div class="chk"><input type="checkbox" id="f-pick-quick"/><label for="f-pick-quick" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Quick pickup (30 min + 10/extra machine)</label></div>
       <div class="row"><div><label>Delivery address</label>
         <select id="f-drop-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
         <input id="f-drop" placeholder="Start typing…" autocomplete="off"/></div></div>
       <div class="row r2"><div><label>Delivery access from</label><input id="f-drop-open" type="time"/></div><div><label>to</label><input id="f-drop-close" type="time"/></div></div>
+      <div class="chk"><input type="checkbox" id="f-drop-quick"/><label for="f-drop-quick" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Quick delivery (30 min + 10/extra machine)</label></div>
       <div class="row r2">
         <div><label>Pickups</label><input id="f-npick" type="number" min="0" value="1"/></div>
         <div><label>Deliveries</label><input id="f-ndrop" type="number" min="0" value="1"/></div>
@@ -184,10 +186,12 @@
       <select id="e-pick-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
       <input id="e-pick" autocomplete="off"/></div></div>
     <div class="row r2"><div><label>Pickup access from</label><input id="e-pick-open" type="time"/></div><div><label>to</label><input id="e-pick-close" type="time"/></div></div>
+    <div class="chk"><input type="checkbox" id="e-pick-quick"/><label for="e-pick-quick" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Quick pickup</label></div>
     <div class="row"><div><label>Delivery address</label>
       <select id="e-drop-depot" class="depot-sel"><option value="">— or use ARV warehouse —</option><option value="CW">ARV Cranbourne West (CW)</option><option value="TW">ARV Tullamarine (TW)</option></select>
       <input id="e-drop" autocomplete="off"/></div></div>
     <div class="row r2"><div><label>Delivery access from</label><input id="e-drop-open" type="time"/></div><div><label>to</label><input id="e-drop-close" type="time"/></div></div>
+    <div class="chk"><input type="checkbox" id="e-drop-quick"/><label for="e-drop-quick" style="margin:0;text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Quick delivery</label></div>
     <div class="row r2"><div><label>Pickups</label><input id="e-npick" type="number" min="0"/></div><div><label>Deliveries</label><input id="e-ndrop" type="number" min="0"/></div></div>
     <label>Machines</label><div id="e-mach-rows"></div>
     <button class="btn-ghost" id="e-add-mach" style="margin:0 0 9px;font-size:13px">+ add machine</button>
@@ -311,7 +315,20 @@ function machArea(m){const s=CATALOG[m.model];return s?(s.w/1000)*(s.d/1000)*m.q
 function machKg(m){const s=CATALOG[m.model];return s?s.kg*m.qty:0;}
 function jobArea(j){return j.machines.reduce((s,m)=>s+machArea(m),0);}
 function jobKg(j){return j.machines.reduce((s,m)=>s+machKg(m),0);}
-function jobService(j){return j.npick*PICK_MIN+j.ndrop*DROP_MIN;}
+function jobMachCount(j){return j.machines.reduce((s,m)=>s+(m.qty||1),0);}
+// Service time for ONE stop (pickup or delivery) of a job.
+// Normal stop = 30 min. Quick stop = 30 + (machines-1)*10 (tailgate/pallet-jack setup once).
+const QUICK_BASE=30, QUICK_EXTRA=10;
+function stopService(j, type){
+  const quick = type==='pick' ? j.pickQuick : j.dropQuick;
+  const base = type==='pick' ? PICK_MIN : DROP_MIN;
+  if(!quick) return base;
+  const n=Math.max(1, jobMachCount(j));
+  return QUICK_BASE + (n-1)*QUICK_EXTRA;
+}
+function jobService(j){
+  return (j.npick?stopService(j,'pick'):0) + (j.ndrop?stopService(j,'drop'):0);
+}
 function jobLabel(j){ const i=jobs.findIndex(x=>x.id===j.id)+1; return j.ref?j.ref:('Job '+(i>0?i:'?')); }
 function cageArea(n){return n*(CAGE.w/1000)*(CAGE.d/1000);}
 function fmt(min){min=Math.round(min);const h=Math.floor(min/60),m=min%60;return(h?h+'h ':'')+(m?m+'m':(h?'':'0m'));}
@@ -466,7 +483,7 @@ function sequence(dayJobs, startCages){
     if(winClose!=null && arrival>winClose){ missed=true; timedMiss=true;
       const why=(node.timed&&node.tto===winClose)?'timed slot':'site closes';
       warnings.push(`Window missed (${why}): arrive ${hhmm(arrival)}, closes ${hhmm(winClose)} at ${node.addr}.`); }
-    const service=(type==='pick'?PICK_MIN:DROP_MIN);
+    const service=stopService(node.job, type);
     if(type==='pick'){usedArea+=jobArea(node.job);usedKg+=jobKg(node.job);onboard.push(node.job.id);}
     else{const i=onboard.indexOf(node.job.id);if(i>=0)onboard.splice(i,1);usedArea-=jobArea(node.job);usedKg-=jobKg(node.job);if(usedArea<0)usedArea=0;if(usedKg<0)usedKg=0;cageFloor=0;}
     clock+=service;                    // clock now = departure time (ETD)
@@ -510,7 +527,7 @@ function twoOptImprove(routeStops, startCages){
       if(ac!=null)winClose=(winClose==null)?ac:Math.min(winClose,ac);
       if(winOpen!=null&&clock<winOpen)clock=winOpen;       // wait
       if(winClose!=null&&clock>winClose)return false;       // missed
-      clock+=(s.type==='pick'?PICK_MIN:DROP_MIN);
+      clock+=stopService(s.job, s.type);
       prev=s;
     }
     return true;
@@ -578,6 +595,8 @@ function readLeg(){
   const timed=document.getElementById('f-timed').checked;
   const tfrom=document.getElementById('f-tfrom').value, tto=document.getElementById('f-tto').value;
   const ref=document.getElementById('f-ref').value.trim();
+  const pickQuick=document.getElementById('f-pick-quick').checked;
+  const dropQuick=document.getElementById('f-drop-quick').checked;
   if(!pickAddr&&!dropAddr)return null;
   if(npick===0&&ndrop===0)return null;
   // remember access hours per address
@@ -587,7 +606,7 @@ function readLeg(){
   const drop = dropAddr?(picked.drop&&picked.drop.addr===dropAddr?{...picked.drop}:{addr:dropAddr,lat:null,lng:null,depot:null}):null;
   if(pick){pick.open=pOpen||'';pick.close=pClose||'';}
   if(drop){drop.open=dOpen||'';drop.close=dClose||'';}
-  return {pick,drop,npick,ndrop,machines,timed,tfrom,tto,ref};
+  return {pick,drop,npick,ndrop,machines,timed,tfrom,tto,ref,pickQuick,dropQuick};
 }
 function clearLegForm(){
   picked={pick:null,drop:null};
@@ -598,6 +617,8 @@ function clearLegForm(){
   document.getElementById('f-npick').value=1;document.getElementById('f-ndrop').value=1;
   document.getElementById('f-timed').checked=false;document.getElementById('timed-fields').style.display='none';
   const rf=document.getElementById('f-ref'); if(rf)rf.value='';
+  const pq=document.getElementById('f-pick-quick'); if(pq)pq.checked=false;
+  const dq=document.getElementById('f-drop-quick'); if(dq)dq.checked=false;
   machRows.innerHTML='';machRows.appendChild(machRowHTML());
 }
 function renderStaged(){
@@ -845,6 +866,8 @@ window.editJob=(id)=>{
   document.getElementById('e-tto').value=j.tto||'11:00';
   document.getElementById('e-date').value=j.date;
   document.getElementById('e-ref').value=j.ref||'';
+  document.getElementById('e-pick-quick').checked=!!j.pickQuick;
+  document.getElementById('e-drop-quick').checked=!!j.dropQuick;
   document.getElementById('e-pick-open').value=j.pick&&j.pick.open?j.pick.open:'';
   document.getElementById('e-pick-close').value=j.pick&&j.pick.close?j.pick.close:'';
   document.getElementById('e-drop-open').value=j.drop&&j.drop.open?j.drop.open:'';
@@ -880,6 +903,8 @@ document.getElementById('edit-save').onclick=async ()=>{
   j.machines=[...eMach.querySelectorAll('.mach-row')].map(r=>({model:r.querySelector('.m-model').value,qty:+r.querySelector('.m-qty').value||1}));
   j.timed=document.getElementById('e-timed').checked;
   j.ref=document.getElementById('e-ref').value.trim();
+  j.pickQuick=document.getElementById('e-pick-quick').checked;
+  j.dropQuick=document.getElementById('e-drop-quick').checked;
   j.tfrom=document.getElementById('e-tfrom').value; j.tto=document.getElementById('e-tto').value;
   j.pick=pickAddr?(ePicked.pick&&ePicked.pick.addr===pickAddr?ePicked.pick:{addr:pickAddr,lat:null,lng:null,depot:null}):null;
   j.drop=dropAddr?(ePicked.drop&&ePicked.drop.addr===dropAddr?ePicked.drop:{addr:dropAddr,lat:null,lng:null,depot:null}):null;
@@ -930,15 +955,19 @@ async function planDay(){
   btn.disabled=false;
 }
 
-/* fetch + cache the road-time matrix for the day's points */
+/* fetch + cache the road-time matrix for the day's points (traffic-aware by time of day) */
 async function ensureRoadMatrix(dayJobs){
   const coords=[{lat:CW.lat,lng:CW.lng},{lat:TW.lat,lng:TW.lng}];
   dayJobs.forEach(j=>{ if(j.pick&&j.pick.lat!=null)coords.push({lat:j.pick.lat,lng:j.pick.lng});
     if(j.drop&&j.drop.lat!=null)coords.push({lat:j.drop.lat,lng:j.drop.lng}); });
-  const sig=coordSig(coords);
-  if(roadMatrix&&roadMatrix.sig===sig)return;  // cached — no new API call
+  // departure time: the planned day at ~08:00 local; if that's in the past, Google needs a future time,
+  // so the server falls back to now+1h. We still send the intended time of day.
+  const dep=parseYMD(selectedDate); dep.setHours(8,0,0,0);
+  let depTs=Math.floor(dep.getTime()/1000);
+  const sig=coordSig(coords)+'@'+depTs;
+  if(roadMatrix&&roadMatrix.sig===sig)return;
   try{
-    const r=await fetch('/api/fullmatrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({coords})});
+    const r=await fetch('/api/fullmatrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({coords, departureTime:depTs})});
     const data=await r.json();
     if(data.minutes&&data.minutes.length){ roadMatrix={coords, m:data.minutes, sig}; }
     else { roadMatrix=null; if(data.error)showBanner('Road-time matrix unavailable ('+data.error+') — using estimates.'); }
@@ -951,18 +980,23 @@ function stopKey(s){return s.job.id+':'+s.type;}
 function drawRoute(displaySeq){
   const waypoints=[{location:{lat:TW.lat,lng:TW.lng},stopover:true},
     ...displaySeq.map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}))];
+  // traffic-aware: depart at the planned day ~08:00, but Google requires a future time
+  let dep=parseYMD(selectedDate); dep.setHours(8,0,0,0);
+  if(dep.getTime()<Date.now()+60000) dep=new Date(Date.now()+3600000); // future fallback
   directionsService.route({
     origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:CW.lat,lng:CW.lng},
-    waypoints, optimizeWaypoints:false, travelMode:google.maps.TravelMode.DRIVING
+    waypoints, optimizeWaypoints:false, travelMode:google.maps.TravelMode.DRIVING,
+    drivingOptions:{departureTime:dep, trafficModel:'bestguess'}
   },(res,st)=>{
     if(st==='OK'){
       directionsRenderer.setDirections(res);
-      // res.legs: [CW->TW, TW->stop0, stop0->stop1, ..., lastStop->CW]
       lastLegs=res.routes[0].legs;
       recomputeTimes(displaySeq);
     }
   });
 }
+// helper: a leg's minutes preferring traffic duration when present
+function legMin(leg){ return Math.round(((leg.duration_in_traffic&&leg.duration_in_traffic.value)||leg.duration.value)/60); }
 
 let lastLegs=null;
 let lastDisplaySeq=[], lastDepotPicks=[], lastDayJobs=[];
@@ -971,25 +1005,25 @@ let lastDisplaySeq=[], lastDepotPicks=[], lastDayJobs=[];
 function recomputeTimes(displaySeq){
   if(!lastLegs)return;
   const DEPART_CW=5*60;
-  const cwtwMin=Math.round(lastLegs[0].duration.value/60);
+  const cwtwMin=legMin(lastLegs[0]);
   const twArrival=DEPART_CW+cwtwMin;
   let clock=Math.max(twArrival, DAY_START_MIN);
   const startClock=clock;
   let timedMiss=false, longWait=false;
   const stopsTimed=displaySeq.map((s,i)=>{
-    const driveMin=Math.round(lastLegs[i+1].duration.value/60);
+    const driveMin=legMin(lastLegs[i+1]);
     let eta=clock+driveMin, waitMin=0, missed=false;
     if(s.type==='drop' && s.timed){
       const tf=timeToMin(s.job.tfrom), tt=timeToMin(s.job.tto);
       if(tf!=null && eta<tf){ waitMin=tf-eta; eta=tf; if(waitMin>=LONG_WAIT_MIN)longWait=true; }
       if(tt!=null && eta>tt){ missed=true; timedMiss=true; }
     }
-    const service=(s.type==='pick'?PICK_MIN:DROP_MIN);
+    const service=stopService(s.job, s.type);
     const etd=eta+service;
     clock=etd;
     return {...s, driveMin, eta, service, etd, waitMin, missed};
   });
-  const backMin=Math.round(lastLegs[lastLegs.length-1].duration.value/60);
+  const backMin=legMin(lastLegs[lastLegs.length-1]);
   const finishClock=clock+backMin;
   lastDisplaySeq=stopsTimed;
   lastTiming={cwtwMin,backMin,finishClock,startClock,twArrival,departCW:DEPART_CW,timedMiss,longWait};

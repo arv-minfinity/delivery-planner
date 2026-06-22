@@ -39,6 +39,10 @@ app.post("/api/fullmatrix", async (req, res) => {
     const coords = Array.isArray(req.body.coords) ? req.body.coords.filter(c => c && c.lat != null && c.lng != null) : [];
     const n = coords.length;
     if (n < 2) return res.json({ minutes: [], n });
+    // departure_time must be in the future for traffic prediction; default to now+1h if absent/past.
+    let depTime = parseInt(req.body.departureTime, 10);
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!depTime || depTime < nowSec) depTime = nowSec + 3600;
     // Distance Matrix allows up to 25 origins/destinations and 100 elements per request.
     // For our day sizes (<= ~15 stops + depots) we batch origins to stay <=100 elements/request.
     const locs = coords.map(c => `${c.lat},${c.lng}`).join("|");
@@ -51,14 +55,18 @@ app.post("/api/fullmatrix", async (req, res) => {
         "https://maps.googleapis.com/maps/api/distancematrix/json" +
         `?origins=${encodeURIComponent(origins)}` +
         `&destinations=${encodeURIComponent(locs)}` +
-        `&mode=driving&units=metric&key=${API_KEY}`;
+        `&mode=driving&units=metric&departure_time=${depTime}&traffic_model=best_guess&key=${API_KEY}`;
       const r = await fetch(url);
       const text = await r.text();
       let data; try { data = JSON.parse(text); } catch { return res.status(502).json({ error: "Maps service returned non-JSON (status " + r.status + ")." }); }
       if (data.status !== "OK") return res.status(502).json({ error: "Matrix error: " + data.status + (data.error_message ? " — " + data.error_message : "") });
       data.rows.forEach((row, ri) => {
         row.elements.forEach((el, cj) => {
-          if (el.status === "OK" && el.duration) minutes[start + ri][cj] = Math.round(el.duration.value / 60);
+          if (el.status === "OK") {
+            // prefer traffic-adjusted duration when present
+            const secs = (el.duration_in_traffic && el.duration_in_traffic.value) || (el.duration && el.duration.value);
+            if (secs != null) minutes[start + ri][cj] = Math.round(secs / 60);
+          }
         });
       });
     }
