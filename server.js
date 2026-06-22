@@ -30,6 +30,45 @@ app.get("/api/config", (req, res) => {
   res.json({ browserKey: BROWSER_KEY });
 });
 
+// --- full NxN road-time matrix (one Distance Matrix request) ---
+// body: { coords: [{lat,lng}, ...] }  returns: { minutes: [[..]], n }
+// minutes[i][j] = driving minutes from coords[i] to coords[j] (null if unavailable)
+app.post("/api/fullmatrix", async (req, res) => {
+  try {
+    if (!API_KEY) return res.status(500).json({ error: "Server has no GOOGLE_MAPS_API_KEY set." });
+    const coords = Array.isArray(req.body.coords) ? req.body.coords.filter(c => c && c.lat != null && c.lng != null) : [];
+    const n = coords.length;
+    if (n < 2) return res.json({ minutes: [], n });
+    // Distance Matrix allows up to 25 origins/destinations and 100 elements per request.
+    // For our day sizes (<= ~15 stops + depots) we batch origins to stay <=100 elements/request.
+    const locs = coords.map(c => `${c.lat},${c.lng}`).join("|");
+    const minutes = Array.from({ length: n }, () => Array(n).fill(null));
+    const maxOriginsPerCall = Math.max(1, Math.floor(100 / n)); // keep elements per call <= 100
+    for (let start = 0; start < n; start += maxOriginsPerCall) {
+      const batch = coords.slice(start, start + maxOriginsPerCall);
+      const origins = batch.map(c => `${c.lat},${c.lng}`).join("|");
+      const url =
+        "https://maps.googleapis.com/maps/api/distancematrix/json" +
+        `?origins=${encodeURIComponent(origins)}` +
+        `&destinations=${encodeURIComponent(locs)}` +
+        `&mode=driving&units=metric&key=${API_KEY}`;
+      const r = await fetch(url);
+      const text = await r.text();
+      let data; try { data = JSON.parse(text); } catch { return res.status(502).json({ error: "Maps service returned non-JSON (status " + r.status + ")." }); }
+      if (data.status !== "OK") return res.status(502).json({ error: "Matrix error: " + data.status + (data.error_message ? " — " + data.error_message : "") });
+      data.rows.forEach((row, ri) => {
+        row.elements.forEach((el, cj) => {
+          if (el.status === "OK" && el.duration) minutes[start + ri][cj] = Math.round(el.duration.value / 60);
+        });
+      });
+    }
+    res.json({ minutes, n });
+  } catch (err) {
+    console.error("fullmatrix error", err);
+    res.status(500).json({ error: "Failed to build the travel-time matrix." });
+  }
+});
+
 // --- travel time matrix ---
 // body: { points: ["addr or area", ...] }  (in route order)
 // returns: { legs: [{ from, to, minutes, meters, status }], totalMinutes }

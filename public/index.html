@@ -336,6 +336,25 @@ function haversineMin(a,b){
   return Math.max(6, km/40*60); // ~40 km/h effective metro avg
 }
 
+/* Road-time matrix (real driving minutes), fetched once per stop set and cached.
+   roadMatrix.idx: function(point)->matrix index via nearest coord match; roadMatrix.m: NxN minutes. */
+let roadMatrix=null;        // {coords:[{lat,lng}], m:[[...]], sig}
+function coordSig(coords){ return coords.map(c=>c.lat.toFixed(4)+','+c.lng.toFixed(4)).join(';'); }
+function matrixIndexFor(pt){
+  if(!roadMatrix||pt.lat==null)return -1;
+  // exact-ish match by rounded coords
+  let best=-1,bd=Infinity;
+  roadMatrix.coords.forEach((c,i)=>{const d=Math.abs(c.lat-pt.lat)+Math.abs(c.lng-pt.lng);if(d<bd){bd=d;best=i;}});
+  return bd<0.0005?best:-1;   // ~50m tolerance
+}
+function travelMin(a,b){
+  if(roadMatrix){
+    const ia=matrixIndexFor(a), ib=matrixIndexFor(b);
+    if(ia>=0&&ib>=0){ const v=roadMatrix.m[ia][ib]; if(v!=null)return v; }
+  }
+  return haversineMin(a,b);   // fallback when matrix not loaded or pair missing
+}
+
 /* ============================================================
    LOAD-AWARE SEQUENCER (geography + strict timed windows)
    - Depot pickups (CW/TW) loaded at start/drop, no detour.
@@ -375,7 +394,7 @@ function sequence(dayJobs, startCages){
   let cur={lat:TW.lat,lng:TW.lng};
   function loadFrac(){return Math.max((usedArea+cageFloor)/TRUCK.floorM2, usedKg/TRUCK.maxKg);}
   function isFull(){return loadFrac()>=FULL_FRAC;}
-  function nearest(list){let best=null,bd=Infinity;list.forEach(n=>{if(n.done)return;const d=haversineMin(cur,n);if(d<bd){bd=d;best=n;}});return best?{node:best,mins:bd}:null;}
+  function nearest(list){let best=null,bd=Infinity;list.forEach(n=>{if(n.done)return;const d=travelMin(cur,n);if(d<bd){bd=d;best=n;}});return best?{node:best,mins:bd}:null;}
 
   // declare go() early via hoisting note: go is a function declaration below, available here.
   // EARLY NEAR-DEPOT DELIVERY PASS:
@@ -385,7 +404,7 @@ function sequence(dayJobs, startCages){
   let didEarly=true;
   while(didEarly){
     didEarly=false;
-    const candidates=drops.filter(d=>!d.done && onboard.includes(d.job.id) && haversineMin({lat:TW.lat,lng:TW.lng}, d)<=NEAR_TW_MIN);
+    const candidates=drops.filter(d=>!d.done && onboard.includes(d.job.id) && travelMin({lat:TW.lat,lng:TW.lng}, d)<=NEAR_TW_MIN);
     // also require its pickup already happened (depot pickups are already done)
     const servable=candidates.filter(d=>{const p=picks.find(x=>x.job.id===d.job.id&&x.type==='pick');return !p||p.done;});
     if(servable.length){ const n=nearest(servable); if(n){ go(n.node,'drop'); didEarly=true; } }
@@ -406,14 +425,14 @@ function sequence(dayJobs, startCages){
     // If a timed delivery is aboard and we'd risk missing its window by doing something else first, go now.
     const urgent=mostUrgentTimed();
     if(urgent){
-      const eta=clock+haversineMin(cur,urgent);
+      const eta=clock+travelMin(cur,urgent);
       // if going now lands us within/at the window (allowing wait), and any delay would push past close, prioritise it
       if(eta>=( (urgent.tto||1e9) - DROP_MIN )) { go(urgent,'drop'); continue; }
       // otherwise, only divert to a quick nearby pickup if it won't blow the window
       const cand=picks.filter(p=>!p.done && (usedArea+jobArea(p.job)+cageFloor)<=TRUCK.floorM2 && (usedKg+jobKg(p.job))<=TRUCK.maxKg);
       const np=nearest(cand);
       if(np){
-        const afterPick=clock+np.mins+PICK_MIN+haversineMin(np.node,urgent);
+        const afterPick=clock+np.mins+PICK_MIN+travelMin(np.node,urgent);
         if(afterPick <= (urgent.tto||1e9)){ go(np.node,'pick'); continue; }
       }
       go(urgent,'drop'); continue;
@@ -434,7 +453,7 @@ function sequence(dayJobs, startCages){
   }
 
   function go(node,type){
-    const mins=haversineMin(cur,node);
+    const mins=travelMin(cur,node);
     clock+=mins;                       // clock = arrival time at node
     let arrival=clock, waitMin=0, missed=false;
     // Effective window = overlap of timed slot (deliveries) and site access hours (both stop types)
@@ -454,8 +473,42 @@ function sequence(dayJobs, startCages){
     node.done=true;cur={lat:node.lat,lng:node.lng};
     seq.push({...node, driveMin:Math.round(mins), eta:arrival, etd:clock, service, waitMin, missed});
   }
-  const back=haversineMin(cur,CW);
+  const back=travelMin(cur,CW);
   return {seq, totalMin:(clock-DAY_START_MIN)+back, backMin:Math.round(back), warnings, timedMiss, longWait};
+}
+
+/* 2-opt improvement on the route-stop order (uses travelMin = real road times when matrix loaded).
+   Order is [TW, stop1..stopK, CW] for distance; we only reorder the middle stops.
+   Rejects any order that breaks pickup-before-delivery. Keeps the better-driving order. */
+function twoOptImprove(routeStops){
+  if(routeStops.length<3)return routeStops;
+  const cost=(arr)=>{
+    let total=0, prev={lat:TW.lat,lng:TW.lng};
+    for(const s of arr){ total+=travelMin(prev,s); prev=s; }
+    total+=travelMin(prev,CW);
+    return total;
+  };
+  const precOK=(arr)=>{
+    for(const id of new Set(arr.map(s=>s.job.id))){
+      const p=arr.findIndex(s=>s.job.id===id&&s.type==='pick');
+      const d=arr.findIndex(s=>s.job.id===id&&s.type==='drop');
+      if(p>=0&&d>=0&&p>d)return false;
+    }
+    return true;
+  };
+  let best=routeStops.slice(), bestCost=cost(best), improved=true, guard=0;
+  while(improved && guard++<60){
+    improved=false;
+    for(let i=0;i<best.length-1;i++){
+      for(let k=i+1;k<best.length;k++){
+        const cand=best.slice(0,i).concat(best.slice(i,k+1).reverse(), best.slice(k+1));
+        if(!precOK(cand))continue;
+        const c=cost(cand);
+        if(c<bestCost-0.01){ best=cand; bestCost=c; improved=true; }
+      }
+    }
+  }
+  return best;
 }
 
 /* ---------- booking: find next weekday that fits ---------- */
@@ -823,61 +876,48 @@ async function planDay(){
   const btn=document.getElementById('plan-btn');btn.disabled=true;
   await geocodeMissing(dayJobs);
 
+  // Build the set of points (depots + all stop coords) and fetch a real road-time matrix (cached).
+  await ensureRoadMatrix(dayJobs);
+
   const cages=+document.getElementById('f-cages').value||0;
-  const {seq}=sequence(dayJobs,cages);
-  lastRouteStops=seq;
+  // first sequence pass (now using real road times via travelMin)
+  let {seq}=sequence(dayJobs,cages);
   lastDayJobs=dayJobs;
   lastDepotPicks=seq.filter(s=>s.atDepot);
-
   const depotPicks=seq.filter(s=>s.atDepot);
   let routeStops=seq.filter(s=>!s.atDepot && s.lat!=null);
 
-  // If the user locked a manual order, reorder routeStops to match it.
   if(manualOrder){
     const byKey=k=>routeStops.find(s=>stopKey(s)===k);
     const reordered=manualOrder.map(byKey).filter(Boolean);
-    // include any stops not in the saved order (e.g. after an edit) at the end
     routeStops.forEach(s=>{if(!reordered.includes(s))reordered.push(s);});
     routeStops=reordered;
+  } else {
+    // 2-opt improvement on real road times (respects pickup-before-delivery).
+    // Skip when a timed delivery constrains order (keep the sequencer's time-aware order).
+    const hasTimed=routeStops.some(s=>s.timed);
+    if(!hasTimed) routeStops=twoOptImprove(routeStops);
+    else enforcePrecedence(routeStops);
   }
 
-  const hasTimed=routeStops.some(s=>s.timed);
-  // optimize only when: no timed delivery AND no manual lock
-  const optimize = !hasTimed && !manualOrder;
+  drawRoute(routeStops);
+  lastRouteStops=[...depotPicks,...routeStops];
+  btn.disabled=false;
+}
 
-  const optWaypoints=routeStops.map(s=>({location:{lat:s.lat,lng:s.lng},stopover:true}));
-
-  // fixed CW -> TW leg
-  directionsService.route({
-    origin:{lat:CW.lat,lng:CW.lng}, destination:{lat:TW.lat,lng:TW.lng}, travelMode:google.maps.TravelMode.DRIVING
-  },(cwtw,st0)=>{
-    const cwtwMin=(st0==='OK')?cwtw.routes[0].legs[0].duration.value/60:0;
-    directionsService.route({
-      origin:{lat:TW.lat,lng:TW.lng}, destination:{lat:CW.lat,lng:CW.lng},
-      waypoints:optWaypoints, optimizeWaypoints:optimize, travelMode:google.maps.TravelMode.DRIVING
-    },(result,status)=>{
-      btn.disabled=false;
-      if(status!=='OK'){showBanner('Directions failed: '+status);renderResult(dayJobs,null,null,seq);return;}
-      hideBanner();
-
-      let displaySeq=routeStops;
-      const wo=result.routes[0].waypoint_order;
-      if(optimize && wo && wo.length===routeStops.length){
-        displaySeq=wo.map(i=>routeStops[i]);
-        enforcePrecedence(displaySeq);
-        // if Google's optimized order broke precedence and we reordered it, the drawn polyline
-        // still reflects Google's order; re-route in our corrected order to keep map + list in sync
-      }
-
-      // Draw the map in our final display order (CW -> TW -> displaySeq -> CW) so the polyline matches the list.
-      drawRoute(displaySeq);
-
-      const finalSeq=[...depotPicks, ...displaySeq];
-      // store current order so reordering buttons have a baseline
-      manualOrder = manualOrder || null;
-      renderResult(dayJobs, cwtwMin, displaySeq, depotPicks);
-    });
-  });
+/* fetch + cache the road-time matrix for the day's points */
+async function ensureRoadMatrix(dayJobs){
+  const coords=[{lat:CW.lat,lng:CW.lng},{lat:TW.lat,lng:TW.lng}];
+  dayJobs.forEach(j=>{ if(j.pick&&j.pick.lat!=null)coords.push({lat:j.pick.lat,lng:j.pick.lng});
+    if(j.drop&&j.drop.lat!=null)coords.push({lat:j.drop.lat,lng:j.drop.lng}); });
+  const sig=coordSig(coords);
+  if(roadMatrix&&roadMatrix.sig===sig)return;  // cached — no new API call
+  try{
+    const r=await fetch('/api/fullmatrix',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({coords})});
+    const data=await r.json();
+    if(data.minutes&&data.minutes.length){ roadMatrix={coords, m:data.minutes, sig}; }
+    else { roadMatrix=null; if(data.error)showBanner('Road-time matrix unavailable ('+data.error+') — using estimates.'); }
+  }catch(e){ roadMatrix=null; showBanner('Road-time matrix request failed — using estimates.'); }
 }
 
 function stopKey(s){return s.job.id+':'+s.type;}
