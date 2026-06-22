@@ -478,9 +478,10 @@ function sequence(dayJobs, startCages){
 }
 
 /* 2-opt improvement on the route-stop order (uses travelMin = real road times when matrix loaded).
-   Order is [TW, stop1..stopK, CW] for distance; we only reorder the middle stops.
-   Rejects any order that breaks pickup-before-delivery. Keeps the better-driving order. */
-function twoOptImprove(routeStops){
+   Order is [TW, stop1..stopK, CW]; only the middle stops reorder.
+   Rejects any order that breaks pickup-before-delivery OR misses a timed slot / site access window.
+   Among feasible orders, keeps the lowest driving time. */
+function twoOptImprove(routeStops, startCages){
   if(routeStops.length<3)return routeStops;
   const cost=(arr)=>{
     let total=0, prev={lat:TW.lat,lng:TW.lng};
@@ -496,15 +497,41 @@ function twoOptImprove(routeStops){
     }
     return true;
   };
-  let best=routeStops.slice(), bestCost=cost(best), improved=true, guard=0;
-  while(improved && guard++<60){
+  // simulate the timeline along an order; return true if no timed/access window is missed
+  const windowsOK=(arr)=>{
+    let clock=DAY_START_MIN, prev={lat:TW.lat,lng:TW.lng};
+    for(const s of arr){
+      clock+=travelMin(prev,s);
+      let winOpen=null,winClose=null;
+      if(s.type==='drop'&&s.timed){winOpen=timeToMin(s.job.tfrom);winClose=timeToMin(s.job.tto);}
+      const ao=timeToMin(s.open||(hoursFor(s.addr)&&hoursFor(s.addr).open));
+      const ac=timeToMin(s.close||(hoursFor(s.addr)&&hoursFor(s.addr).close));
+      if(ao!=null)winOpen=(winOpen==null)?ao:Math.max(winOpen,ao);
+      if(ac!=null)winClose=(winClose==null)?ac:Math.min(winClose,ac);
+      if(winOpen!=null&&clock<winOpen)clock=winOpen;       // wait
+      if(winClose!=null&&clock>winClose)return false;       // missed
+      clock+=(s.type==='pick'?PICK_MIN:DROP_MIN);
+      prev=s;
+    }
+    return true;
+  };
+  const feasible=(arr)=>precOK(arr)&&windowsOK(arr);
+
+  // Ensure we start from a feasible order if possible; if the incoming order isn't window-feasible,
+  // 2-opt will still search for one that is.
+  let best=routeStops.slice(), bestCost=cost(best), bestFeas=feasible(best), improved=true, guard=0;
+  while(improved && guard++<80){
     improved=false;
     for(let i=0;i<best.length-1;i++){
       for(let k=i+1;k<best.length;k++){
         const cand=best.slice(0,i).concat(best.slice(i,k+1).reverse(), best.slice(k+1));
         if(!precOK(cand))continue;
+        const candFeas=windowsOK(cand);
         const c=cost(cand);
-        if(c<bestCost-0.01){ best=cand; bestCost=c; improved=true; }
+        // Prefer feasible over infeasible; among same feasibility, prefer lower cost.
+        if((candFeas&&!bestFeas) || (candFeas===bestFeas && c<bestCost-0.01)){
+          best=cand; bestCost=c; bestFeas=candFeas; improved=true;
+        }
       }
     }
   }
@@ -893,11 +920,9 @@ async function planDay(){
     routeStops.forEach(s=>{if(!reordered.includes(s))reordered.push(s);});
     routeStops=reordered;
   } else {
-    // 2-opt improvement on real road times (respects pickup-before-delivery).
-    // Skip when a timed delivery constrains order (keep the sequencer's time-aware order).
-    const hasTimed=routeStops.some(s=>s.timed);
-    if(!hasTimed) routeStops=twoOptImprove(routeStops);
-    else enforcePrecedence(routeStops);
+    // Window-aware 2-opt on real road times: optimises driving while keeping
+    // pickup-before-delivery AND every timed slot / site-access window feasible.
+    routeStops=twoOptImprove(routeStops, cages);
   }
 
   drawRoute(routeStops);
@@ -1031,6 +1056,8 @@ function renderResultStats(dayJobs, cwtwMin, stopsTimed, backMin, finishClock, s
     <div class="stat"><span>8-hour window</span><span class="v">${fmt(WINDOW_MIN)}</span></div>
     <div class="bar ${overflow?'over':''}"><i style="width:${pct}%"></i></div></div>`;
   html+=`<button class="btn-amber" id="pdf-btn" style="width:100%;margin-bottom:10px">🖨 Print run sheet (PDF)</button>`;
+  const matrixState = roadMatrix ? `road-time matrix active (${roadMatrix.coords.length} points)` : 'using straight-line estimates (matrix not loaded)';
+  html+=`<div class="small" style="margin-bottom:8px;color:${roadMatrix?'var(--green)':'var(--red)'}">⚙ ${matrixState} · 2-opt optimisation on</div>`;
   if(manualOrder)html+=`<div class="small" style="margin-bottom:8px">Manual order locked. Use Smart optimize to revert to best road-time order.</div>`;
   if(reasons.length)html+=`<div class="card" style="padding:12px 14px"><label style="margin-bottom:6px">Notes</label>${reasons.map(r=>`<div class="reason">${r}</div>`).join('')}</div>`;
   res.innerHTML=html;
