@@ -164,6 +164,7 @@
       <button class="btn-amber" id="plan-btn">⚡ Plan day</button>
       <button class="btn-ghost" id="opt-btn" title="Re-run best road-time order">↻ Smart optimize</button>
     </div>
+    <div class="chk" style="margin:-4px 0 10px"><input type="checkbox" id="auto-opt" checked/><label for="auto-opt" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;color:var(--muted)">Auto-optimize when a job is added or a day is opened</label></div>
     <div id="result"><div class="empty">Pick a day, then Plan day.</div></div>
     <h2 class="section" style="margin-top:16px">Route stops <span class="small">drag or ▲▼ to reorder</span></h2>
     <div id="stops"><div class="empty">No route yet.</div></div>
@@ -523,7 +524,8 @@ function sequence(dayJobs, startCages){
    Order is [TW, stop1..stopK, CW]; only the middle stops reorder.
    Rejects any order that breaks pickup-before-delivery OR misses a timed slot / site access window.
    Among feasible orders, keeps the lowest driving time. */
-function twoOptImprove(routeStops, startCages){
+function twoOptImprove(routeStops, startCages, preArea, preKg){
+  preArea=preArea||0; preKg=preKg||0;
   if(routeStops.length<3)return routeStops;
   const cost=(arr)=>{
     let total=0, prev={lat:TW.lat,lng:TW.lng};
@@ -531,13 +533,30 @@ function twoOptImprove(routeStops, startCages){
     total+=travelMin(prev,CW);
     return total;
   };
+  // simulate load along the order; reject if floor area OR weight is ever exceeded.
+  // Depot pickups are already loaded before this list, so seed with their load + cages.
+  const capacityOK=(arr)=>{
+    let usedArea=preArea, usedKg=preKg, cageFloor=cageArea(startCages||0), delivered=false;
+    for(const s of arr){
+      if(s.type==='pick'){
+        usedArea+=jobArea(s.job); usedKg+=jobKg(s.job);
+        if(usedArea+cageFloor>TRUCK.floorM2+1e-6)return false;
+        if(usedKg>TRUCK.maxKg+1e-6)return false;
+      } else {
+        usedArea-=jobArea(s.job); usedKg-=jobKg(s.job);
+        if(usedArea<0)usedArea=0; if(usedKg<0)usedKg=0;
+        cageFloor=0; // first delivery frees the cage floor space
+      }
+    }
+    return true;
+  };
   const precOK=(arr)=>{
     for(const id of new Set(arr.map(s=>s.job.id))){
       const p=arr.findIndex(s=>s.job.id===id&&s.type==='pick');
       const d=arr.findIndex(s=>s.job.id===id&&s.type==='drop');
       if(p>=0&&d>=0&&p>d)return false;
     }
-    return true;
+    return capacityOK(arr);   // capacity is a HARD constraint alongside precedence
   };
   // simulate the timeline along an order; return true if no timed/access window is missed
   const windowsOK=(arr)=>{
@@ -836,8 +855,15 @@ function selectDay(ds){
   manualOrder=null;  // reset any locked order when switching days
   document.getElementById('sel-label').textContent=fmtDate(parseYMD(ds));
   renderCal();renderDayJobs();
-  document.getElementById('result').innerHTML='<div class="empty">Press Plan day to route &amp; check.</div>';
-  document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';
+  const auto=document.getElementById('auto-opt') && document.getElementById('auto-opt').checked;
+  if(auto && mapsReady && jobsOn(ds).length){
+    document.getElementById('result').innerHTML='<div class="empty">Optimizing…</div>';
+    document.getElementById('stops').innerHTML='';
+    planDay();
+  } else {
+    document.getElementById('result').innerHTML='<div class="empty">Press Plan day to route &amp; check.</div>';
+    document.getElementById('stops').innerHTML='<div class="empty">No route yet.</div>';
+  }
 }
 
 function renderDayJobs(){
@@ -986,9 +1012,10 @@ async function planDay(){
     routeStops.forEach(s=>{if(!reordered.includes(s))reordered.push(s);});
     routeStops=reordered;
   } else {
-    // Window-aware 2-opt on real road times: optimises driving while keeping
-    // pickup-before-delivery AND every timed slot / site-access window feasible.
-    routeStops=twoOptImprove(routeStops, cages);
+    // Window-aware + capacity-aware 2-opt/or-opt on real road times.
+    const preArea=depotPicks.reduce((s,p)=>s+jobArea(p.job),0);
+    const preKg=depotPicks.reduce((s,p)=>s+jobKg(p.job),0);
+    routeStops=twoOptImprove(routeStops, cages, preArea, preKg);
   }
 
   drawRoute(routeStops);
